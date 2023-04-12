@@ -1,0 +1,25 @@
+﻿Flow Metric Name,Flow Metric Code,Flow Component
+Fall pulse magnitude,FA_Mag,Fall pulse flow
+Fall pulse timing,FA_Tim,Fall pulse flow
+Fall pulse duration,FA_Dur,Fall pulse flow
+Wet-season low baseflow,Wet_BFL_Mag_10,Wet-season baseflow
+Wet-season median baseflow,Wet_BFL_Mag_50,Wet-season baseflow
+Wet-season timing,Wet_Tim,Wet-season baseflow
+Wet-season duration,Wet_BFL_Dur,Wet-season baseflow
+2-year flood magnitude,Peak_2,Peak flow
+5-year flood magnitude,Peak_5,Peak flow
+10-year flood magnitude,Peak_10,Peak flow
+2-year flood duration,Peak_Dur_2,Peak flow
+5-year flood duration,Peak_Dur_5,Peak flow
+10-year flood duration,Peak_Dur_10,Peak flow
+2-year flood frequency,Peak_Fre_2,Peak flow
+5-year flood frequency,Peak_Fre_5,Peak flow
+10-year flood frequency,Peak_Fre_10,Peak flow
+Spring recession magnitude,SP_Mag,Spring recession flow
+Spring timing,SP_Tim,Spring recession flow
+Spring duration,SP_Dur,Spring recession flow
+Spring rate of change,SP_ROC,Spring recession flow
+Dry-season median baseflow,DS_Mag_50,Dry-season baseflow
+Dry-season high baseflow,DS_Mag_90,Dry-season baseflow
+Dry-season timing,DS_Tim,Dry-season baseflow
+Dry-season duration,DS_Dur_WS,Dry-season baseflow

@@ -1,3 +1,5 @@
+## exploring possible appraoches to flow eco in modified channels
+
 library(tidylog)
 library(tidyverse)
 library(sf)
@@ -9,7 +11,32 @@ getwd()
 
 # Flow data ---------------------------------------------------------------
 
+dh_data <- read.csv("/Users/katieirving/Library/CloudStorage/OneDrive-SCCWRP/Documents - Katie’s MacBook Pro/git/SMC_Modified_Channels/ignore/SoCal_bio_deltaH_summary_supp_final.csv")
+head(dh_data)
 
+dh_median <- dh_data %>%
+  filter(summary.statistic =="median") %>%
+  select(site, flow_metric, deltah_final) %>%
+  rename(masterid= site)
+dim(dh_median) # 7236
+head(dh_median)
+
+## full names for labels
+labels <- read.csv("input_data/ffm_names.csv")
+labels <- labels[1:24, ]
+labels <- labels %>% rename(Hydro_endpoint = Flow.Metric.Code)
+labels[25, 1] <- "Magnitude of largest annual storm"
+labels[25, 2] <- "Q99"
+labels[25, 3] <- "Peak Flow"
+labels
+
+limits <- left_join(limits, labels, by = "Hydro_endpoint")
+
+## sites with flow data
+
+flowSites <- unique(dh_median$masterid)
+
+flowSites
 
 ## channel engineering data
 
@@ -17,12 +44,14 @@ BioEng <- read.csv("ignore/02_chan_eng.csv") %>%
   select(-c(X,channel_engineering_classification_date, channel_engineering_personnel, channel_engineering_comments)) %>%
   mutate(Class2 = ifelse(channel_engineering_class =="NAT", "Natural", "Modified"))
 
+BioEng
+
 # Bio data ----------------------------------------------------------------
 
 ##  sites only
 
-bugSites <- st_read("output_data/01_bio_sites_all.shp")
-head(bugSites)
+bioSites <- st_read("input_data/01_bio_sites_all.shp")
+head(bioSites)
 
 ## bugs data
 
@@ -35,52 +64,46 @@ asciScores <- read.csv("ignore/01_asci_comp_mets_comid_socal.csv")
 head(asciScores)
 
 
-# Join bio and temp -------------------------------------------------------
+# Join bio and flow -------------------------------------------------------
 
-## how many temp in bug sites
-sum(TempSites %in% bugSites$COMID) ## 478
+## how many flow in bug sites
+sum(flowSites %in% bioSites$masterid) ## 422
 
-sum(TempSites %in% csciScores$COMID) ## 458
+sum(flowSites %in% csciScores$masterid) ## 402
 
-## filter bug sites to temp sites
-bugTempSites <- bugSites %>%
-  filter(COMID %in% TempSites)
-
-## how many sites with scores?
-sum(unique(csciScores$masterid) %in% unique(bugTempSites$masterid)) ## 705
+## filter bug sites to flow sites
+bugflowSites <- bioSites %>%
+  filter(masterid %in% flowSites)
 
 ## filter bug data using masterid ### remove reps - remove 2nd rep for now, change later!!!!
 csciScoresLA <- csciScores %>%
   select(-X, -stationcode) %>%
-  filter(masterid %in% bugTempSites$masterid, fieldreplicate == 1 ) %>%
+  filter(masterid %in% bugflowSites$masterid, fieldreplicate == 1 ) %>%
   separate(sampledate, into = c("sampledate", "Time"), sep= "T", remove = F) %>%
   separate(sampledate, into = c("year", "Month", "Day"), sep= "-", remove = F) %>%
   mutate(year = as.numeric(year))
 
-length(unique(csciScoresLA$masterid)) ## 705 sites in LA region with temp
+length(unique(csciScoresLA$masterid)) ## 705 sites in LA region with flow
 
 
 ## filter bug data using masterid ### remove reps - remove 2nd rep for now, change later!!!!
 asciScoresLA <- asciScores %>%
   select(-X, -stationcode) %>%
-  filter(masterid %in% bugTempSites$masterid,replicate == 1 ) %>%
+  filter(masterid %in% bugflowSites$masterid,replicate == 1 ) %>%
   separate(sampledate, into = c("sampledate", "Time"), sep= "T", remove = F) %>%
   separate(sampledate, into = c("year", "Month", "Day"), sep= "-", remove = F) %>%
   mutate(year = as.numeric(year))
 
-length(unique(asciScoresLA$masterid)) ## 466 sites in LA region with temp
+length(unique(asciScoresLA$masterid)) ## 336 sites in LA region with flow
 
 
-# Join bio sites to temp data ---------------------------------------------
+# Join bio sites to flow data ---------------------------------------------
 
-scoresTempSites <- csciScoresLA 
+scoresflowSites <- csciScoresLA 
 
-## how many comids in temp data and bio data?
 
-sum(unique(AllTempAlt$COMID) %in% unique(scoresTempSites$COMID)) ## 458
-## join by comid and year
-
-AllData <- left_join(scoresTempSites, AllTempAlt, by = c("COMID", "year")) 
+AllData <- left_join(scoresflowSites, dh_median, by = c("masterid"))  %>%
+  left_join(BioEng, by = "masterid")
 head(AllData)
 dim(AllData) #
 
@@ -90,66 +113,96 @@ meancsci <- AllData %>%
 meancsci
 
 ## save out
-save(AllData, file = "ignore/03_bugs_temp_joined_by_year.RData")
+save(AllData, file = "output_data/00_bugs_flow_joined_by_masterid.RData")
 
-AllDataA <- left_join(asciScoresLA, AllTempAlt, by = c("COMID", "year")) 
-head(AllDataA)
-dim(AllDataA) ## 
+# AllDataA <- left_join(asciScoresLA,  dh_median, by = c("masterid")) 
+# head(AllDataA)
+# dim(AllDataA) ## 
+# 
+# ## save out
+# save(AllDataA, file = "output_data/00_algae_flow_joined_by_masterid.RData")
 
-## save out
-save(AllDataA, file = "ignore/03_algae_temp_joined_by_year.RData")
 
-
-# Models: CSCI ------------------------------------------------------------------
+# GLM Models: CSCI ------------------------------------------------------------------
 
 AllDataLong2 <- AllData %>%
   filter(!Metric == "count")
 
-unique(AllDataLong2$CurMetric)
+unique(AllDataLong2$flow_metric)
 ## create df of model configurations
 
 ## bio 
 biol.endpoints<-"csci"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$flow_metric))
+flow.endpoints
 
 # Thresholds for index
-index.thresholds <- c(0.60, 0.79)
+index.thresholds <- c(0.79)
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints, index.thresholds= index.thresholds, stringsAsFactors = F)
+# direction of alteration
+
+Direction.alt <- c("Pos", "Neg")
+Direction.alt
+
+# channel type
+
+channel.type <- unique(na.omit(AllDataLong2$Class2))
+channel.type
+
+
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints, Direction.alt= Direction.alt, channel.type = channel.type, stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 bio_h_summary
 head(AllDataLong2)
+i=1
 ## model of each configuration
 log.lm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
-  imet<-as.character(bio_h_summary[i,"index.thresholds"])
+  dmet<-as.character(bio_h_summary[i,"Direction.alt"])
+  cmet<-as.character(bio_h_summary[i,"channel.type"])
+
   
-  mydat<-AllDataLong2 %>%
-    filter(Metric == bmet,
-           CurMetric == tmet) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
-    filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
-    distinct()
+  if(dmet == "Pos") {
+    
+    mydat<-AllDataLong2 %>%
+      filter(Metric == bmet,
+             flow_metric == tmet, Class2 == cmet) %>%
+      select(Metric, MetricValue, deltah_final, Class2) %>% ## only metrics needed
+      drop_na( deltah_final) %>%
+      filter(deltah_final > 0) %>%
+      filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
+      distinct()
+  } else {
+    
+    mydat<-AllDataLong2 %>%
+      filter(Metric == bmet,
+             flow_metric == tmet,  Class2 == cmet) %>%
+      select(Metric, MetricValue, deltah_final, Class2) %>% ## only metrics needed
+      drop_na( deltah_final) %>%
+      filter(deltah_final < 0) %>%
+      filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
+      distinct()
+  }
   
-  mydat$Condition<-ifelse(mydat$MetricValue< imet ,0, 1) ## convert to binary
+
+
+  mydat$Condition<-ifelse(mydat$MetricValue< 0.79 ,0, 1) ## convert to binary
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~CurTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~deltah_final, family=binomial(link="logit"), data=mydat) ### glm
   
   
 })
-
+log.lm
 ## save models
-save(log.lm, file = "output_data/03_csci_glm_currentTemp.RData")
+save(log.lm, file = "output_data/00_csci_all_glm_flow.RData")
 
 ### get rsqds and pvals
 for(i in 1:length(log.lm)) {
@@ -159,88 +212,69 @@ for(i in 1:length(log.lm)) {
   bio_h_summary$PValue[i] <- mod$coefficients[8]
   bio_h_summary$McFaddensR2[i] <- 1-mod$deviance/mod$null.deviance
   bio_h_summary$n[i] <- mod$df[2]+1
+  
 }
 ## save configs and r sqds
-save(bio_h_summary, file="output_data/03_csci_glm_rsqds.RData")
+save(bio_h_summary, file="output_data/00_csci_glm_rsqds.RData")
 bio_h_summary
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
-
+AllDataLong2
 ### get predictions and fitted values
 for(i in 1:length(log.lm)) {
   
-  bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
-  ind <- bio_h_summary[i,"index.thresholds"]
-  
-  data <- AllDataLong2 %>%
-    filter(Metric == bio,
-           CurMetric == temp) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
-    filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
-    distinct()
-  
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
+  bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
+  dmet<-as.character(bio_h_summary[i,"Direction.alt"])
+  cmet<-as.character(bio_h_summary[i,"channel.type"])
+  tmet
   
   ## new data - plus and minus 10% as a start
-  tempvalues <- seq(range(data$CurTemp)[1]-10,range(data$CurTemp)[2]+10,0.05)
+  # flowvalues <- seq(range(data$Curflow)[1]-10,range(data$Curflow)[2]+10,0.05)
   
   ## get model, predict, extract all data and categories
   mod <- log.lm[[i]]
-  predictedVals <- predict.glm(mod,list(CurTemp = tempvalues),  type = "response")
-  DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
-  DFX$Bio <- bio
-  DFX$Variable <- temp
-  DFX$BioThreshold <- ind
-  DFX$MinVal <-  range(data$CurTemp)[1]
-  DFX$MaxVal <-  range(data$CurTemp)[2]
+  predictedVals <- predict.glm(mod,  type = "response")
+  
+  DFX <- cbind(mod$data, as.data.frame(predictedVals)) %>%
+    rename(ChannelType = Class2, Value = deltah_final) %>%
+    mutate(DirectionAlt = dmet, Variable = tmet)
+
+ 
   
   DF <- bind_rows(DF, DFX)
   
 }
+dmet
 
-# plot(DF$predictedVals, DF$BioVals)
-
-DF$BioThreshold <- as.factor(DF$BioThreshold)
-
+DF
 ### predicted figures
-mets <- unique(DF$BioThreshold)
+mets <- unique(DF$Variable)
 mets
 m=1
+
 ## facet labels
-supp.labs <- c(
-  "Max_Wkl_Max_StreamT_grt_30_"="Weeks greater than 86F",
-  "Max_Wkly_Mean_StreamT" = "Max Weekly Mean",
-  "Max_Wkl_Max_StreamT" = "Weekly Maximum",
-  "Min_Wkl_Min_StreamT" = "Weekly Minimum",
-  "Max_Wkl_Rng_StreamT" = " Max Weekly Range",
-  "Mean_Wkl_Rng_StreamT" =  "Av Weekly Range" 
-)
+
+
 
 for(m in 1:length(mets)) {
   
-  T1 <- (ggplot(subset(DF, BioThreshold == mets[m]), aes(y=predictedVals, x=Value, group = Variable, color = Variable)) +
+  T1 <- (ggplot(subset(DF, Variable == mets[m]), aes(y=predictedVals, x=Value, group = ChannelType, color = ChannelType)) +
            # geom_point(size=0.2) +
            geom_line( linewidth = 1)+
            # stat_smooth(method = "lm", formula = y ~ x + I(x^2), linewidth = 1)+
            # geom_hline(yintercept = 0.6,  linetype="dashed", linewidth=0.5, color = "grey50") +
-           facet_wrap(~Variable, labeller = as_labeller(supp.labs),
-                      scales = "free") +
-           # geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
-           #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
-           geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
-                      aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5, show.legend = T) +
-           scale_x_continuous(name="Water Temp (°F)") +
-           scale_y_continuous(name = paste0("Probability of ", mets[m], " CSCI")) +
-           theme(legend.position = "none"))
+           facet_wrap(~DirectionAlt, scales = "free") +
+           scale_x_continuous(name=paste(mets[m])) +
+           scale_y_continuous(name = paste0("Probability of 0.79 CSCI"))) 
+           # theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "00_", mets[m], "_csci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
 }
 
@@ -262,16 +296,16 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")),
                       aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5) +
-           scale_x_continuous(name="Water Temp (°F)") +
+           scale_x_continuous(name="Water flow (°F)") +
            scale_y_continuous(name = paste0("Probability of Good CSCI")))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=6, width=6)
 }
 
-## get temps for different probabilities
+## get flows for different probabilities
 
 head(DF)
 
@@ -290,28 +324,28 @@ unique(AllDataLong2$CurMetric)
 ## bio 
 biol.endpoints<-"ASCI_Hybrid"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
 
 # Thresholds for index
 index.thresholds <- c(0.75, 0.86)
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints, 
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints, 
                              index.thresholds= index.thresholds, stringsAsFactors = F)
 bio_h_summary
 ## model of each configuration
 log.lm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   imet<-as.character(bio_h_summary[i,"index.thresholds"])
   
   mydat<-AllDataLong2 %>%
     filter(Metric == bmet,
            CurMetric == tmet) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
+    select(Curflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Curflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   
@@ -319,13 +353,13 @@ log.lm <-lapply(1:nrow(bio_h_summary), function(i)
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~CurTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Curflow, family=binomial(link="logit"), data=mydat) ### glm
   
   
 })
 
 ## save models
-save(log.lm, file = "output_data/03_asci_glm_currentTemp.RData")
+save(log.lm, file = "output_data/03_asci_glm_currentflow.RData")
 
 ### get rsqds and pvals
 for(i in 1:length(log.lm)) {
@@ -340,7 +374,7 @@ for(i in 1:length(log.lm)) {
 ## save configs and r sqds
 save(bio_h_summary, file="output_data/03_asci_glm_rsqds.RData")
 bio_h_summary
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 
 ## blank df
 DF <- NULL
@@ -350,31 +384,31 @@ DF <- as.data.frame(DF)
 for(i in 1:length(log.lm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   ind <- bio_h_summary[i,"index.thresholds"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
+           CurMetric == flow) %>%
+    select(Curflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Curflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   
   
   ## new data - plus and minus 10% as a start
-  tempvalues <- seq(range(data$CurTemp)[1]-10,range(data$CurTemp)[2]+10,0.05)
+  flowvalues <- seq(range(data$Curflow)[1]-10,range(data$Curflow)[2]+10,0.05)
   
   ## get model, predict, extract all data and categories
   mod <- log.lm[[i]]
-  predictedVals <- predict.glm(mod,list(CurTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Curflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$BioThreshold <- ind
-  DFX$MinVal <-  range(data$CurTemp)[1]
-  DFX$MaxVal <-  range(data$CurTemp)[2]
+  DFX$MinVal <-  range(data$Curflow)[1]
+  DFX$MaxVal <-  range(data$Curflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -409,13 +443,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
                       aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5, show.legend = T) +
-           scale_x_continuous(name="Water Temp (°F)") +
+           scale_x_continuous(name="Water flow (°F)") +
            scale_y_continuous(name = paste0("Probability of ", mets[m], " CSCI")) +
            theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
 }
 
@@ -437,17 +471,17 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")),
                       aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5) +
-           scale_x_continuous(name="Water Temp (°F)") +
+           scale_x_continuous(name="Water flow (°F)") +
            scale_y_continuous(name = paste0("Probability of Good ASCI")) +
            theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=6, width=6)
 }
 
-## get temps for different probabilities
+## get flows for different probabilities
 
 head(DF)
 
@@ -460,14 +494,14 @@ MaxDFASCI
 
 MaxDF <- rbind(MaxDFASCI, MaxDFCSCI)
 
-write.csv(MaxDF, "ignore/03_probs_per_temp.csv")
+write.csv(MaxDF, "ignore/03_probs_per_flow.csv")
 
 
 # Alteration models: CSCI -------------------------------------------------
 
 AllDataLong2 <- AllData %>%
   filter(!Metric == "count") #%>%
-# pivot_longer(AltTempMinus80:AltTempDivide80, names_to="AltMetric", values_to = "AltValues")
+# pivot_longer(AltflowMinus80:AltflowDivide80, names_to="AltMetric", values_to = "AltValues")
 
 names(AllDataLong2)
 
@@ -476,16 +510,16 @@ names(AllDataLong2)
 ## bio 
 biol.endpoints<-"csci"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
+flow.endpoints
 
-## Alt temp
+## Alt flow
 alt.endpoints<- unique(na.omit(AllDataLong2$AltMetric))
 alt.endpoints
 
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 
@@ -493,7 +527,7 @@ bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.e
 log.glm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   amet<-as.character(bio_h_summary[i,"alt.endpoints"])
   
@@ -501,17 +535,17 @@ log.glm <-lapply(1:nrow(bio_h_summary), function(i)
     filter(Metric == bmet,
            CurMetric == tmet, 
            AltMetric == amet) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() #%>%
-  # filter(AltTemp > 0) ## take only positive altered temps
+  # filter(Altflow > 0) ## take only positive altered flows
   
   mydat$Condition<-ifelse(mydat$MetricValue< 0.60 ,0,1) ## convert to binary
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~AltTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Altflow, family=binomial(link="logit"), data=mydat) ### glm
   
   # View(mydat)
 })
@@ -533,7 +567,7 @@ for(i in 1:length(log.glm)) {
 save(bio_h_summary, file="output_data/03_csci_altered_glm_rsqds.RData")
 
 
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
@@ -542,37 +576,37 @@ bio_h_summary
 for(i in 1:length(log.glm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   alt <- bio_h_summary[i,"alt.endpoints"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp,
+           CurMetric == flow,
            AltMetric == alt) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() 
   
   ## new data - plus and minus 10 as a start
   
-  if (alt == "AltTempDivide80" ) {
-    tempvalues <- seq(range(data$AltTemp)[1]*0.9,range(data$AltTemp)[2]*1.1,0.05)
+  if (alt == "AltflowDivide80" ) {
+    flowvalues <- seq(range(data$Altflow)[1]*0.9,range(data$Altflow)[2]*1.1,0.05)
   } else {
-    tempvalues <- seq(range(data$AltTemp)[1]-10,range(data$AltTemp)[2]+10,0.05)
+    flowvalues <- seq(range(data$Altflow)[1]-10,range(data$Altflow)[2]+10,0.05)
   }
   
   
   ## get model, predict, extract all data and categories
   mod <- log.glm[[i]]
-  predictedVals <- predict.glm(mod,list(AltTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Altflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$AltVar <- alt
-  DFX$MinVal <-  range(data$AltTemp)[1]
-  DFX$MaxVal <-  range(data$AltTemp)[2]
+  DFX$MinVal <-  range(data$Altflow)[1]
+  DFX$MaxVal <-  range(data$Altflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -613,13 +647,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            # geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
            #            aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5, show.legend = T) +
-           scale_x_continuous(name=paste0(mets[m],": Temperature Alteration (°F)")) +
+           scale_x_continuous(name=paste0(mets[m],": flowerature Alteration (°F)")) +
            scale_y_continuous(name = "Probability of good CSCI") +
            theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
 }
 
@@ -629,23 +663,23 @@ for(m in 1:length(mets)) {
 
 AllDataLong2 <- AllDataA %>%
   filter(!Metric == "count") #%>%
-# pivot_longer(AltTempMinus80:AltTempDivide80, names_to="AltMetric", values_to = "AltValues")
+# pivot_longer(AltflowMinus80:AltflowDivide80, names_to="AltMetric", values_to = "AltValues")
 
 ## create df of model configurations
 
 ## bio 
 biol.endpoints<-"ASCI_Hybrid"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
+flow.endpoints
 
-## Alt temp
+## Alt flow
 alt.endpoints<- unique(na.omit(AllDataLong2$AltMetric))
 alt.endpoints
 
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 bio_h_summary
@@ -655,7 +689,7 @@ i
 log.glm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   amet<-as.character(bio_h_summary[i,"alt.endpoints"])
   
@@ -663,17 +697,17 @@ log.glm <-lapply(1:nrow(bio_h_summary), function(i)
     filter(Metric == bmet,
            CurMetric == tmet, 
            AltMetric == amet) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() #%>%
-  # filter(AltTemp > 0) ## take only positive altered temps
+  # filter(Altflow > 0) ## take only positive altered flows
   
   mydat$Condition<-ifelse(mydat$MetricValue< 0.75 ,0,1) ## convert to binary
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~AltTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Altflow, family=binomial(link="logit"), data=mydat) ### glm
   
   # View(mydat)
 })
@@ -695,7 +729,7 @@ for(i in 1:length(log.glm)) {
 save(bio_h_summary, file="output_data/03_asci_altered_glm_rsqds.RData")
 
 
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
@@ -704,34 +738,34 @@ DF <- as.data.frame(DF)
 for(i in 1:length(log.glm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   alt <- bio_h_summary[i,"alt.endpoints"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp,
+           CurMetric == flow,
            AltMetric == alt) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() 
   
   ## new data - plus and minus 10% as a start
-  if (alt == "AltTempDivide80" ) {
-    tempvalues <- seq(range(data$AltTemp)[1]*0.9,range(data$AltTemp)[2]*1.1,0.05)
+  if (alt == "AltflowDivide80" ) {
+    flowvalues <- seq(range(data$Altflow)[1]*0.9,range(data$Altflow)[2]*1.1,0.05)
   } else {
-    tempvalues <- seq(range(data$AltTemp)[1]-10,range(data$AltTemp)[2]+10,0.05)
+    flowvalues <- seq(range(data$Altflow)[1]-10,range(data$Altflow)[2]+10,0.05)
   }
   ## get model, predict, extract all data and categories
   mod <- log.glm[[i]]
-  predictedVals <- predict.glm(mod,list(AltTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Altflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$AltVar <- alt
-  DFX$MinVal <-  range(data$AltTemp)[1]
-  DFX$MaxVal <-  range(data$AltTemp)[2]
+  DFX$MinVal <-  range(data$Altflow)[1]
+  DFX$MaxVal <-  range(data$Altflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -772,13 +806,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            # geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
            #            aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5, show.legend = T) +
-           scale_x_continuous(name=paste0(mets[m],": Temperature Alteration (°F)")) +
+           scale_x_continuous(name=paste0(mets[m],": flowerature Alteration (°F)")) +
            scale_y_continuous(name = "Probability of median ASCI") +
            theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
 }
 
@@ -800,14 +834,14 @@ unique(AllDataLong2$CurMetric)
 ## bio 
 biol.endpoints<-"csci"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
+flow.endpoints
 
 ## engineering
 eng.endpoints <- unique(na.omit(AllDataLong2$Class2))
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints, eng.endpoints=eng.endpoints,stringsAsFactors = F)
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints, eng.endpoints=eng.endpoints,stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 bio_h_summary
@@ -816,7 +850,7 @@ head(AllDataLong2)
 log.lm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   emet<-as.character(bio_h_summary[i,"eng.endpoints"])
   
@@ -824,8 +858,8 @@ log.lm <-lapply(1:nrow(bio_h_summary), function(i)
     filter(Metric == bmet,
            CurMetric == tmet,
            Class2 == emet) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
+    select(Curflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Curflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   mydat
@@ -833,13 +867,13 @@ log.lm <-lapply(1:nrow(bio_h_summary), function(i)
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~CurTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Curflow, family=binomial(link="logit"), data=mydat) ### glm
   
   
 })
 
 ## save models
-save(log.lm, file = "output_data/03_csci_glm_currentTemp_chan_eng.RData")
+save(log.lm, file = "output_data/03_csci_glm_currentflow_chan_eng.RData")
 
 ### get rsqds and pvals
 for(i in 1:length(log.lm)) {
@@ -854,7 +888,7 @@ for(i in 1:length(log.lm)) {
 ## save configs and r sqds
 save(bio_h_summary, file="output_data/03_csci_glm_rsqds_chan_eng.RData")
 bio_h_summary
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 
 ## blank df
 DF <- NULL
@@ -864,32 +898,32 @@ DF <- as.data.frame(DF)
 for(i in 1:length(log.lm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   eng <- bio_h_summary[i,"eng.endpoints"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp,
+           CurMetric == flow,
            Class2 == eng) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
+    select(Curflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Curflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   
   
   ## new data - plus and minus 10% as a start
-  tempvalues <- seq(range(data$CurTemp)[1]-10,range(data$CurTemp)[2]+10,0.05)
+  flowvalues <- seq(range(data$Curflow)[1]-10,range(data$Curflow)[2]+10,0.05)
   
   ## get model, predict, extract all data and categories
   mod <- log.lm[[i]]
-  predictedVals <- predict.glm(mod,list(CurTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Curflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$Eng <- eng
-  DFX$MinVal <-  range(data$CurTemp)[1]
-  DFX$MaxVal <-  range(data$CurTemp)[2]
+  DFX$MinVal <-  range(data$Curflow)[1]
+  DFX$MaxVal <-  range(data$Curflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -925,13 +959,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5) +
            geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
                       aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5) +
-           scale_x_continuous(name="Water Temp (°F)") +
+           scale_x_continuous(name="Water flow (°F)") +
            scale_y_continuous(name =  "Probability of median CSCI")) +
     theme(legend.title=element_blank())
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_csci_", mets[m], "_temp_response_predicted_glm_ModChannels.jpg")
+  file.name1 <- paste0(out.dir, "03_csci_", mets[m], "_flow_response_predicted_glm_ModChannels.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
   
 }
@@ -953,14 +987,14 @@ unique(AllDataLong2$CurMetric)
 ## bio 
 biol.endpoints<-"ASCI_Hybrid"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))
+flow.endpoints
 
 ## engineering
 eng.endpoints <- unique(na.omit(AllDataLong2$Class2))
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints, eng.endpoints=eng.endpoints,stringsAsFactors = F)
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints, eng.endpoints=eng.endpoints,stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 bio_h_summary
@@ -969,7 +1003,7 @@ head(AllDataLong2)
 log.lm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   emet<-as.character(bio_h_summary[i,"eng.endpoints"])
   
@@ -977,8 +1011,8 @@ log.lm <-lapply(1:nrow(bio_h_summary), function(i)
     filter(Metric == bmet,
            CurMetric == tmet,
            Class2 == emet) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
+    select(Curflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Curflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   
@@ -986,13 +1020,13 @@ log.lm <-lapply(1:nrow(bio_h_summary), function(i)
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~CurTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Curflow, family=binomial(link="logit"), data=mydat) ### glm
   
   
 })
 
 ## save models
-save(log.lm, file = "output_data/03_asci_glm_currentTemp_chan_eng.RData")
+save(log.lm, file = "output_data/03_asci_glm_currentflow_chan_eng.RData")
 
 ### get rsqds and pvals
 for(i in 1:length(log.lm)) {
@@ -1006,7 +1040,7 @@ for(i in 1:length(log.lm)) {
 ## save configs and r sqds
 save(bio_h_summary, file="output_data/03_asci_glm_rsqds_chan_eng.RData")
 bio_h_summary
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 
 ## blank df
 DF <- NULL
@@ -1016,32 +1050,32 @@ DF <- as.data.frame(DF)
 for(i in 1:length(log.lm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   eng <- bio_h_summary[i,"eng.endpoints"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp,
+           CurMetric == flow,
            Class2 == eng) %>%
-    select(CurTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(CurTemp, MetricValue) %>%
+    select(Curflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Curflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   
   
   ## new data - plus and minus 10% as a start
-  tempvalues <- seq(range(data$CurTemp)[1]-10,range(data$CurTemp)[2]+10,0.05)
+  flowvalues <- seq(range(data$Curflow)[1]-10,range(data$Curflow)[2]+10,0.05)
   
   ## get model, predict, extract all data and categories
   mod <- log.lm[[i]]
-  predictedVals <- predict.glm(mod,list(CurTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Curflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$Eng <- eng
-  DFX$MinVal <-  range(data$CurTemp)[1]
-  DFX$MaxVal <-  range(data$CurTemp)[2]
+  DFX$MinVal <-  range(data$Curflow)[1]
+  DFX$MaxVal <-  range(data$Curflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -1074,13 +1108,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5) +
            geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
                       aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5) +
-           scale_x_continuous(name="Water Temp (°F)") +
+           scale_x_continuous(name="Water flow (°F)") +
            scale_y_continuous(name =  "Probability of median CSCI")) +
     theme(legend.title=element_blank())
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_asci_", mets[m], "temp_response_predicted_glm_modChannels.jpg")
+  file.name1 <- paste0(out.dir, "03_asci_", mets[m], "flow_response_predicted_glm_modChannels.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
   
 }
@@ -1089,7 +1123,7 @@ for(m in 1:length(mets)) {
 
 AllDataLong2 <- AllData %>%
   filter(!Metric == "count") #%>%
-# pivot_longer(AltTempMinus80:AltTempDivide80, names_to="AltMetric", values_to = "AltValues")
+# pivot_longer(AltflowMinus80:AltflowDivide80, names_to="AltMetric", values_to = "AltValues")
 
 names(AllDataLong2)
 
@@ -1098,16 +1132,16 @@ names(AllDataLong2)
 ## bio 
 biol.endpoints<-"csci"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
+flow.endpoints
 
-## Alt temp
+## Alt flow
 alt.endpoints<- unique(na.omit(AllDataLong2$AltMetric))
 alt.endpoints
 
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 
@@ -1115,7 +1149,7 @@ bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.e
 log.glm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   amet<-as.character(bio_h_summary[i,"alt.endpoints"])
   
@@ -1123,17 +1157,17 @@ log.glm <-lapply(1:nrow(bio_h_summary), function(i)
     filter(Metric == bmet,
            CurMetric == tmet, 
            AltMetric == amet) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() #%>%
-  # filter(AltTemp > 0) ## take only positive altered temps
+  # filter(Altflow > 0) ## take only positive altered flows
   
   mydat$Condition<-ifelse(mydat$MetricValue< 0.60 ,0,1) ## convert to binary
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~AltTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Altflow, family=binomial(link="logit"), data=mydat) ### glm
   
   # View(mydat)
 })
@@ -1155,7 +1189,7 @@ for(i in 1:length(log.glm)) {
 save(bio_h_summary, file="output_data/03_csci_altered_glm_rsqds.RData")
 
 
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
@@ -1164,37 +1198,37 @@ bio_h_summary
 for(i in 1:length(log.glm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   alt <- bio_h_summary[i,"alt.endpoints"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp,
+           CurMetric == flow,
            AltMetric == alt) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() 
   
   ## new data - plus and minus 10 as a start
   
-  if (alt == "AltTempDivide80" ) {
-    tempvalues <- seq(range(data$AltTemp)[1]*0.9,range(data$AltTemp)[2]*1.1,0.05)
+  if (alt == "AltflowDivide80" ) {
+    flowvalues <- seq(range(data$Altflow)[1]*0.9,range(data$Altflow)[2]*1.1,0.05)
   } else {
-    tempvalues <- seq(range(data$AltTemp)[1]-10,range(data$AltTemp)[2]+10,0.05)
+    flowvalues <- seq(range(data$Altflow)[1]-10,range(data$Altflow)[2]+10,0.05)
   }
   
   
   ## get model, predict, extract all data and categories
   mod <- log.glm[[i]]
-  predictedVals <- predict.glm(mod,list(AltTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Altflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$AltVar <- alt
-  DFX$MinVal <-  range(data$AltTemp)[1]
-  DFX$MaxVal <-  range(data$AltTemp)[2]
+  DFX$MinVal <-  range(data$Altflow)[1]
+  DFX$MaxVal <-  range(data$Altflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -1235,13 +1269,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            # geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
            #            aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5, show.legend = T) +
-           scale_x_continuous(name=paste0(mets[m],": Temperature Alteration (°F)")) +
+           scale_x_continuous(name=paste0(mets[m],": flowerature Alteration (°F)")) +
            scale_y_continuous(name = "Probability of good CSCI") +
            theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_csci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
 }
 
@@ -1251,23 +1285,23 @@ for(m in 1:length(mets)) {
 
 AllDataLong2 <- AllDataA %>%
   filter(!Metric == "count") #%>%
-# pivot_longer(AltTempMinus80:AltTempDivide80, names_to="AltMetric", values_to = "AltValues")
+# pivot_longer(AltflowMinus80:AltflowDivide80, names_to="AltMetric", values_to = "AltValues")
 
 ## create df of model configurations
 
 ## bio 
 biol.endpoints<-"ASCI_Hybrid"
 
-## temp
-temp.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
-temp.endpoints
+## flow
+flow.endpoints<- unique(na.omit(AllDataLong2$CurMetric))[2:4]
+flow.endpoints
 
-## Alt temp
+## Alt flow
 alt.endpoints<- unique(na.omit(AllDataLong2$AltMetric))
 alt.endpoints
 
 
-bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,temp.endpoints=temp.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
+bio_h_summary<-  expand.grid(biol.endpoints=biol.endpoints,flow.endpoints=flow.endpoints,  alt.endpoints= alt.endpoints, stringsAsFactors = F)
 
 # bio_h_summary <- bio_h_summary[-c(1:9),]
 bio_h_summary
@@ -1277,7 +1311,7 @@ i
 log.glm <-lapply(1:nrow(bio_h_summary), function(i)
 {
   
-  tmet<-as.character(bio_h_summary[i,"temp.endpoints"])
+  tmet<-as.character(bio_h_summary[i,"flow.endpoints"])
   bmet<-as.character(bio_h_summary[i,"biol.endpoints"])
   amet<-as.character(bio_h_summary[i,"alt.endpoints"])
   
@@ -1285,17 +1319,17 @@ log.glm <-lapply(1:nrow(bio_h_summary), function(i)
     filter(Metric == bmet,
            CurMetric == tmet, 
            AltMetric == amet) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() #%>%
-  # filter(AltTemp > 0) ## take only positive altered temps
+  # filter(Altflow > 0) ## take only positive altered flows
   
   mydat$Condition<-ifelse(mydat$MetricValue< 0.86 ,0,1) ## convert to binary
   # mydat <- mydat %>% drop_na(Condition)
   
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
-  glm(Condition~AltTemp, family=binomial(link="logit"), data=mydat) ### glm
+  glm(Condition~Altflow, family=binomial(link="logit"), data=mydat) ### glm
   
   # View(mydat)
 })
@@ -1317,7 +1351,7 @@ for(i in 1:length(log.glm)) {
 save(bio_h_summary, file="output_data/03_asci_altered_glm_rsqds.RData")
 
 
-## make df of predicted values to predict on - need to be different for each temp metric
+## make df of predicted values to predict on - need to be different for each flow metric
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
@@ -1326,34 +1360,34 @@ DF <- as.data.frame(DF)
 for(i in 1:length(log.glm)) {
   
   bio <- bio_h_summary[i,"biol.endpoints"]
-  temp <- bio_h_summary[i,"temp.endpoints"]
+  flow <- bio_h_summary[i,"flow.endpoints"]
   alt <- bio_h_summary[i,"alt.endpoints"]
   
   data <- AllDataLong2 %>%
     filter(Metric == bio,
-           CurMetric == temp,
+           CurMetric == flow,
            AltMetric == alt) %>%
-    select(AltTemp, MetricValue, COMID) %>% ## only metrics needed
-    drop_na(AltTemp, MetricValue) %>%
+    select(Altflow, MetricValue, COMID) %>% ## only metrics needed
+    drop_na(Altflow, MetricValue) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct() 
   
   ## new data - plus and minus 10% as a start
-  if (alt == "AltTempDivide80" ) {
-    tempvalues <- seq(range(data$AltTemp)[1]*0.9,range(data$AltTemp)[2]*1.1,0.05)
+  if (alt == "AltflowDivide80" ) {
+    flowvalues <- seq(range(data$Altflow)[1]*0.9,range(data$Altflow)[2]*1.1,0.05)
   } else {
-    tempvalues <- seq(range(data$AltTemp)[1]-10,range(data$AltTemp)[2]+10,0.05)
+    flowvalues <- seq(range(data$Altflow)[1]-10,range(data$Altflow)[2]+10,0.05)
   }
   ## get model, predict, extract all data and categories
   mod <- log.glm[[i]]
-  predictedVals <- predict.glm(mod,list(AltTemp = tempvalues),  type = "response")
+  predictedVals <- predict.glm(mod,list(Altflow = flowvalues),  type = "response")
   DFX <- as.data.frame(predictedVals)
-  DFX$Value <- tempvalues
+  DFX$Value <- flowvalues
   DFX$Bio <- bio
-  DFX$Variable <- temp
+  DFX$Variable <- flow
   DFX$AltVar <- alt
-  DFX$MinVal <-  range(data$AltTemp)[1]
-  DFX$MaxVal <-  range(data$AltTemp)[2]
+  DFX$MinVal <-  range(data$Altflow)[1]
+  DFX$MaxVal <-  range(data$Altflow)[2]
   
   DF <- bind_rows(DF, DFX)
   
@@ -1394,13 +1428,13 @@ for(m in 1:length(mets)) {
            #            aes(xintercept = 86), linetype="dashed", color = "red", linewidth=0.5, show.legend = T) +
            # geom_vline(data=filter(DF, !Variable %in% c("Max_Wkl_Max_StreamT_grt_30_","Max_Wkl_Rng_StreamT", "Mean_Wkl_Rng_StreamT")), 
            #            aes(xintercept = 80), linetype="dashed", color = "blue", linewidth=0.5, show.legend = T) +
-           scale_x_continuous(name=paste0(mets[m],": Temperature Alteration (°F)")) +
+           scale_x_continuous(name=paste0(mets[m],": flowerature Alteration (°F)")) +
            scale_y_continuous(name = "Probability of good ASCI") +
            theme(legend.position = "none"))
   
   T1
   
-  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_temp_response_predicted_glm.jpg")
+  file.name1 <- paste0(out.dir, "03_", mets[m], "_asci_flow_response_predicted_glm.jpg")
   ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
 }
 
