@@ -46,6 +46,10 @@ BioEng <- read.csv("ignore/02_chan_eng.csv") %>%
 
 BioEng
 
+## count number of asci/csci sites per channel class
+## boxplots of delta h for all channel types
+## test mod streams with derived delta h limits
+
 # Bio data ----------------------------------------------------------------
 
 ##  sites only
