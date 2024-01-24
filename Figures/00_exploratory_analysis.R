@@ -107,6 +107,7 @@ head(bug_tax_ca)
 load(file="/Users/katieirving/Library/CloudStorage/OneDrive-SCCWRP/Documents - Katie’s MacBook Pro/git/Cannabis_Eflows/ignore/SMC_asci_cali_Mar2023_v3.RData")
 head(alg_tax_ca)
 length(unique(bug_tax_ca$masterid))
+
 # asciScores <- read.csv("ignore/01_asci_comp_mets_comid_socal.csv")
 
 # Join bio and flow -------------------------------------------------------
@@ -160,7 +161,7 @@ names(csciScores)
 scoresSites <- bind_rows(asciScores, csciScores)
 
 ## join channel class to bio sites
-engsites <- inner_join(scoresSites, BioEng, by = "masterid")
+engsites <- full_join(scoresSites, BioEng, by = "masterid")
 engsites
 
 length(unique(engsites$masterid))
@@ -171,8 +172,7 @@ tallyclass <- engsites %>%
   group_by(Metric, channel_engineering_class) %>%
   select(-sampleyear, - MetricValue) %>% distinct() %>%
   tally()
-tallyclass
-head(dh_median)
+
 flowsites <- dh_median %>%
   select(masterid) %>%
   mutate(HasFFM = "Yes")
@@ -200,6 +200,9 @@ tallyFFM
 AllData <- right_join(engsites, dh_median, by = c("masterid", "longitude", "latitude"), relationship = "many-to-many")%>%
      left_join(labels, by = "flow_metric")
 AllData
+
+## how many bio sites
+length(unique(AllData$masterid)) ## 479
 
 ## save out
 save(AllData, file = "output_data/00_bugs_algae_flow_joined_by_masterid.RData")

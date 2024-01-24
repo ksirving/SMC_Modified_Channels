@@ -1,0 +1,232 @@
+"","Index","Hydro_endpoint","Flow.Metric.Name","Threshold","Result","n","PercChans"
+"1","asci","DS_Mag_50","Dry-season median baseflow","NATLow","NoImpact",53,30.9941520467836
+"2","asci","DS_Mag_50","Dry-season median baseflow","NATLow","BioImpact",37,21.6374269005848
+"3","asci","DS_Mag_50","Dry-season median baseflow","NATLow","HydroImpact",28,16.374269005848
+"4","asci","DS_Mag_50","Dry-season median baseflow","NATLow","BothImpact",53,30.9941520467836
+"5","asci","DS_Mag_50","Dry-season median baseflow","SB2","BioImpact",2,8.69565217391304
+"6","asci","DS_Mag_50","Dry-season median baseflow","SB2","HydroImpact",1,4.34782608695652
+"7","asci","DS_Mag_50","Dry-season median baseflow","SB2","BothImpact",20,86.9565217391304
+"8","asci","FA_Mag","Fall pulse magnitude","NATLow","NoImpact",31,18.1286549707602
+"9","asci","FA_Mag","Fall pulse magnitude","NATLow","BioImpact",24,14.0350877192982
+"10","asci","FA_Mag","Fall pulse magnitude","NATLow","HydroImpact",50,29.2397660818713
+"11","asci","FA_Mag","Fall pulse magnitude","NATLow","BothImpact",66,38.5964912280702
+"12","asci","Peak_10","10-year flood magnitude","HB","HydroImpact",3,10.3448275862069
+"13","asci","Peak_10","10-year flood magnitude","HB","BothImpact",26,89.6551724137931
+"14","asci","Peak_10","10-year flood magnitude","NAT","HydroImpact",41,39.4230769230769
+"15","asci","Peak_10","10-year flood magnitude","NAT","BothImpact",63,60.5769230769231
+"16","asci","Peak_10","10-year flood magnitude","NATHigh","HydroImpact",26,15.3846153846154
+"17","asci","Peak_10","10-year flood magnitude","NATHigh","BothImpact",143,84.6153846153846
+"18","asci","Peak_10","10-year flood magnitude","NATLow","HydroImpact",20,32.258064516129
+"19","asci","Peak_10","10-year flood magnitude","NATLow","BothImpact",42,67.741935483871
+"20","asci","Peak_10","10-year flood magnitude","NATMed","HydroImpact",48,28.4023668639053
+"21","asci","Peak_10","10-year flood magnitude","NATMed","BothImpact",121,71.5976331360947
+"22","asci","Peak_10","10-year flood magnitude","SB0","HydroImpact",1,25
+"23","asci","Peak_10","10-year flood magnitude","SB0","BothImpact",3,75
+"24","asci","Peak_10","10-year flood magnitude","SB2","HydroImpact",1,5.88235294117647
+"25","asci","Peak_10","10-year flood magnitude","SB2","BothImpact",16,94.1176470588235
+"26","asci","Peak_2","2-year flood magnitude","HB","HydroImpact",3,10.3448275862069
+"27","asci","Peak_2","2-year flood magnitude","HB","BothImpact",26,89.6551724137931
+"28","asci","Peak_2","2-year flood magnitude","NAT","HydroImpact",41,39.4230769230769
+"29","asci","Peak_2","2-year flood magnitude","NAT","BothImpact",63,60.5769230769231
+"30","asci","Peak_2","2-year flood magnitude","NATLow","HydroImpact",35,41.6666666666667
+"31","asci","Peak_2","2-year flood magnitude","NATLow","BothImpact",49,58.3333333333333
+"32","asci","Peak_2","2-year flood magnitude","NATMed","HydroImpact",48,28.4023668639053
+"33","asci","Peak_2","2-year flood magnitude","NATMed","BothImpact",121,71.5976331360947
+"34","asci","Peak_2","2-year flood magnitude","SB0","BothImpact",2,100
+"35","asci","Peak_2","2-year flood magnitude","SB2","HydroImpact",1,4.34782608695652
+"36","asci","Peak_2","2-year flood magnitude","SB2","BothImpact",22,95.6521739130435
+"37","asci","Peak_5","5-year flood magnitude","HB","HydroImpact",3,10.3448275862069
+"38","asci","Peak_5","5-year flood magnitude","HB","BothImpact",26,89.6551724137931
+"39","asci","Peak_5","5-year flood magnitude","NAT","HydroImpact",41,39.4230769230769
+"40","asci","Peak_5","5-year flood magnitude","NAT","BothImpact",63,60.5769230769231
+"41","asci","Peak_5","5-year flood magnitude","NATHigh","HydroImpact",26,15.3846153846154
+"42","asci","Peak_5","5-year flood magnitude","NATHigh","BothImpact",143,84.6153846153846
+"43","asci","Peak_5","5-year flood magnitude","NATLow","HydroImpact",21,32.3076923076923
+"44","asci","Peak_5","5-year flood magnitude","NATLow","BothImpact",44,67.6923076923077
+"45","asci","Peak_5","5-year flood magnitude","NATMed","HydroImpact",48,28.4023668639053
+"46","asci","Peak_5","5-year flood magnitude","NATMed","BothImpact",121,71.5976331360947
+"47","asci","Peak_5","5-year flood magnitude","SB0","BothImpact",2,100
+"48","asci","Peak_5","5-year flood magnitude","SB2","HydroImpact",1,7.14285714285714
+"49","asci","Peak_5","5-year flood magnitude","SB2","BothImpact",13,92.8571428571429
+"50","asci","Q99","Magnitude of largest annual storm","HB","HydroImpact",3,10.3448275862069
+"51","asci","Q99","Magnitude of largest annual storm","HB","BothImpact",26,89.6551724137931
+"52","asci","Q99","Magnitude of largest annual storm","NAT","HydroImpact",41,39.4230769230769
+"53","asci","Q99","Magnitude of largest annual storm","NAT","BothImpact",63,60.5769230769231
+"54","asci","Q99","Magnitude of largest annual storm","NATHigh","HydroImpact",26,15.3846153846154
+"55","asci","Q99","Magnitude of largest annual storm","NATHigh","BothImpact",143,84.6153846153846
+"56","asci","Q99","Magnitude of largest annual storm","NATLow","HydroImpact",18,27.6923076923077
+"57","asci","Q99","Magnitude of largest annual storm","NATLow","BothImpact",47,72.3076923076923
+"58","asci","Q99","Magnitude of largest annual storm","NATMed","HydroImpact",48,28.4023668639053
+"59","asci","Q99","Magnitude of largest annual storm","NATMed","BothImpact",121,71.5976331360947
+"60","asci","Q99","Magnitude of largest annual storm","SB0","BothImpact",2,100
+"61","asci","Q99","Magnitude of largest annual storm","SB2","HydroImpact",1,6.66666666666667
+"62","asci","Q99","Magnitude of largest annual storm","SB2","BothImpact",14,93.3333333333333
+"63","asci","SP_Mag","Spring recession magnitude","HB","HydroImpact",3,10.3448275862069
+"64","asci","SP_Mag","Spring recession magnitude","HB","BothImpact",26,89.6551724137931
+"65","asci","SP_Mag","Spring recession magnitude","NAT","HydroImpact",41,39.4230769230769
+"66","asci","SP_Mag","Spring recession magnitude","NAT","BothImpact",63,60.5769230769231
+"67","asci","SP_Mag","Spring recession magnitude","NATHigh","HydroImpact",26,15.3846153846154
+"68","asci","SP_Mag","Spring recession magnitude","NATHigh","BothImpact",143,84.6153846153846
+"69","asci","SP_Mag","Spring recession magnitude","NATLow","NoImpact",29,16.9590643274854
+"70","asci","SP_Mag","Spring recession magnitude","NATLow","BioImpact",18,10.5263157894737
+"71","asci","SP_Mag","Spring recession magnitude","NATLow","HydroImpact",52,30.4093567251462
+"72","asci","SP_Mag","Spring recession magnitude","NATLow","BothImpact",72,42.1052631578947
+"73","asci","SP_Mag","Spring recession magnitude","NATMed","HydroImpact",48,28.4023668639053
+"74","asci","SP_Mag","Spring recession magnitude","NATMed","BothImpact",121,71.5976331360947
+"75","asci","SP_Mag","Spring recession magnitude","SB0","HydroImpact",1,25
+"76","asci","SP_Mag","Spring recession magnitude","SB0","BothImpact",3,75
+"77","asci","SP_Mag","Spring recession magnitude","SB2","HydroImpact",1,4.34782608695652
+"78","asci","SP_Mag","Spring recession magnitude","SB2","BothImpact",22,95.6521739130435
+"79","asci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","NoImpact",9,5.26315789473684
+"80","asci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","BioImpact",7,4.09356725146199
+"81","asci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","HydroImpact",72,42.1052631578947
+"82","asci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","BothImpact",83,48.5380116959064
+"83","asci","Wet_BFL_Mag_50","Wet-season median baseflow","SB0","HydroImpact",1,25
+"84","asci","Wet_BFL_Mag_50","Wet-season median baseflow","SB0","BothImpact",3,75
+"85","asci","Wet_BFL_Mag_50","Wet-season median baseflow","SB2","HydroImpact",1,4.34782608695652
+"86","asci","Wet_BFL_Mag_50","Wet-season median baseflow","SB2","BothImpact",22,95.6521739130435
+"87","csci","DS_Mag_50","Dry-season median baseflow","HB","BioImpact",10,25
+"88","csci","DS_Mag_50","Dry-season median baseflow","HB","HydroImpact",1,2.5
+"89","csci","DS_Mag_50","Dry-season median baseflow","HB","BothImpact",29,72.5
+"90","csci","DS_Mag_50","Dry-season median baseflow","NAT","NoImpact",127,58.5253456221198
+"91","csci","DS_Mag_50","Dry-season median baseflow","NAT","BioImpact",54,24.8847926267281
+"92","csci","DS_Mag_50","Dry-season median baseflow","NAT","HydroImpact",14,6.45161290322581
+"93","csci","DS_Mag_50","Dry-season median baseflow","NAT","BothImpact",22,10.1382488479263
+"94","csci","DS_Mag_50","Dry-season median baseflow","NATLow","NoImpact",201,66.1184210526316
+"95","csci","DS_Mag_50","Dry-season median baseflow","NATLow","BioImpact",56,18.4210526315789
+"96","csci","DS_Mag_50","Dry-season median baseflow","NATLow","HydroImpact",9,2.96052631578947
+"97","csci","DS_Mag_50","Dry-season median baseflow","NATLow","BothImpact",38,12.5
+"98","csci","DS_Mag_50","Dry-season median baseflow","NATMed","NoImpact",134,44.078947368421
+"99","csci","DS_Mag_50","Dry-season median baseflow","NATMed","BioImpact",81,26.6447368421053
+"100","csci","DS_Mag_50","Dry-season median baseflow","NATMed","HydroImpact",15,4.93421052631579
+"101","csci","DS_Mag_50","Dry-season median baseflow","NATMed","BothImpact",74,24.3421052631579
+"102","csci","DS_Mag_50","Dry-season median baseflow","SB0","BioImpact",4,50
+"103","csci","DS_Mag_50","Dry-season median baseflow","SB0","BothImpact",4,50
+"104","csci","DS_Mag_50","Dry-season median baseflow","SB2","BioImpact",16,53.3333333333333
+"105","csci","DS_Mag_50","Dry-season median baseflow","SB2","BothImpact",14,46.6666666666667
+"106","csci","FA_Mag","Fall pulse magnitude","HB","NoImpact",1,2.5
+"107","csci","FA_Mag","Fall pulse magnitude","HB","BioImpact",18,45
+"108","csci","FA_Mag","Fall pulse magnitude","HB","BothImpact",21,52.5
+"109","csci","FA_Mag","Fall pulse magnitude","NAT","NoImpact",127,58.5253456221198
+"110","csci","FA_Mag","Fall pulse magnitude","NAT","BioImpact",60,27.6497695852535
+"111","csci","FA_Mag","Fall pulse magnitude","NAT","HydroImpact",14,6.45161290322581
+"112","csci","FA_Mag","Fall pulse magnitude","NAT","BothImpact",16,7.37327188940092
+"113","csci","FA_Mag","Fall pulse magnitude","NATLow","HydroImpact",207,75.8241758241758
+"114","csci","FA_Mag","Fall pulse magnitude","NATLow","BothImpact",66,24.1758241758242
+"115","csci","FA_Mag","Fall pulse magnitude","NATMed","NoImpact",134,44.078947368421
+"116","csci","FA_Mag","Fall pulse magnitude","NATMed","BioImpact",92,30.2631578947368
+"117","csci","FA_Mag","Fall pulse magnitude","NATMed","HydroImpact",15,4.93421052631579
+"118","csci","FA_Mag","Fall pulse magnitude","NATMed","BothImpact",63,20.7236842105263
+"119","csci","FA_Mag","Fall pulse magnitude","SB0","BioImpact",6,75
+"120","csci","FA_Mag","Fall pulse magnitude","SB0","BothImpact",2,25
+"121","csci","FA_Mag","Fall pulse magnitude","SB2","BioImpact",25,83.3333333333333
+"122","csci","FA_Mag","Fall pulse magnitude","SB2","BothImpact",5,16.6666666666667
+"123","csci","Peak_10","10-year flood magnitude","HB","HydroImpact",1,3.84615384615385
+"124","csci","Peak_10","10-year flood magnitude","HB","BothImpact",25,96.1538461538462
+"125","csci","Peak_10","10-year flood magnitude","NAT","HydroImpact",18,43.9024390243902
+"126","csci","Peak_10","10-year flood magnitude","NAT","BothImpact",23,56.0975609756098
+"127","csci","Peak_10","10-year flood magnitude","NATHigh","HydroImpact",89,30.0675675675676
+"128","csci","Peak_10","10-year flood magnitude","NATHigh","BothImpact",207,69.9324324324324
+"129","csci","Peak_10","10-year flood magnitude","NATLow","HydroImpact",10,23.8095238095238
+"130","csci","Peak_10","10-year flood magnitude","NATLow","BothImpact",32,76.1904761904762
+"131","csci","Peak_10","10-year flood magnitude","NATMed","HydroImpact",20,19.8019801980198
+"132","csci","Peak_10","10-year flood magnitude","NATMed","BothImpact",81,80.1980198019802
+"133","csci","Peak_10","10-year flood magnitude","SB0","BothImpact",6,100
+"134","csci","Peak_10","10-year flood magnitude","SB2","BothImpact",22,100
+"135","csci","Peak_2","2-year flood magnitude","HB","HydroImpact",1,14.2857142857143
+"136","csci","Peak_2","2-year flood magnitude","HB","BothImpact",6,85.7142857142857
+"137","csci","Peak_2","2-year flood magnitude","NAT","NoImpact",99,45.6221198156682
+"138","csci","Peak_2","2-year flood magnitude","NAT","BioImpact",41,18.8940092165899
+"139","csci","Peak_2","2-year flood magnitude","NAT","HydroImpact",42,19.3548387096774
+"140","csci","Peak_2","2-year flood magnitude","NAT","BothImpact",35,16.1290322580645
+"141","csci","Peak_2","2-year flood magnitude","NATLow","HydroImpact",10,43.4782608695652
+"142","csci","Peak_2","2-year flood magnitude","NATLow","BothImpact",13,56.5217391304348
+"143","csci","Peak_2","2-year flood magnitude","NATMed","NoImpact",105,34.5394736842105
+"144","csci","Peak_2","2-year flood magnitude","NATMed","BioImpact",70,23.0263157894737
+"145","csci","Peak_2","2-year flood magnitude","NATMed","HydroImpact",44,14.4736842105263
+"146","csci","Peak_2","2-year flood magnitude","NATMed","BothImpact",85,27.9605263157895
+"147","csci","Peak_2","2-year flood magnitude","SB0","BothImpact",6,100
+"148","csci","Peak_2","2-year flood magnitude","SB2","BothImpact",4,100
+"149","csci","Peak_5","5-year flood magnitude","HB","HydroImpact",1,4.54545454545455
+"150","csci","Peak_5","5-year flood magnitude","HB","BothImpact",21,95.4545454545455
+"151","csci","Peak_5","5-year flood magnitude","NAT","HydroImpact",22,48.8888888888889
+"152","csci","Peak_5","5-year flood magnitude","NAT","BothImpact",23,51.1111111111111
+"153","csci","Peak_5","5-year flood magnitude","NATHigh","HydroImpact",90,30
+"154","csci","Peak_5","5-year flood magnitude","NATHigh","BothImpact",210,70
+"155","csci","Peak_5","5-year flood magnitude","NATLow","HydroImpact",12,26.0869565217391
+"156","csci","Peak_5","5-year flood magnitude","NATLow","BothImpact",34,73.9130434782609
+"157","csci","Peak_5","5-year flood magnitude","NATMed","HydroImpact",23,23.2323232323232
+"158","csci","Peak_5","5-year flood magnitude","NATMed","BothImpact",76,76.7676767676768
+"159","csci","Peak_5","5-year flood magnitude","SB0","BothImpact",6,100
+"160","csci","Peak_5","5-year flood magnitude","SB2","BothImpact",12,100
+"161","csci","Q99","Magnitude of largest annual storm","HB","HydroImpact",1,2.5
+"162","csci","Q99","Magnitude of largest annual storm","HB","BothImpact",39,97.5
+"163","csci","Q99","Magnitude of largest annual storm","NAT","HydroImpact",22,50
+"164","csci","Q99","Magnitude of largest annual storm","NAT","BothImpact",22,50
+"165","csci","Q99","Magnitude of largest annual storm","NATHigh","HydroImpact",90,30
+"166","csci","Q99","Magnitude of largest annual storm","NATHigh","BothImpact",210,70
+"167","csci","Q99","Magnitude of largest annual storm","NATLow","NoImpact",2,0.657894736842105
+"168","csci","Q99","Magnitude of largest annual storm","NATLow","HydroImpact",208,68.4210526315789
+"169","csci","Q99","Magnitude of largest annual storm","NATLow","BothImpact",94,30.9210526315789
+"170","csci","Q99","Magnitude of largest annual storm","NATMed","HydroImpact",28,25.6880733944954
+"171","csci","Q99","Magnitude of largest annual storm","NATMed","BothImpact",81,74.3119266055046
+"172","csci","Q99","Magnitude of largest annual storm","SB0","BothImpact",4,100
+"173","csci","Q99","Magnitude of largest annual storm","SB2","BioImpact",1,3.33333333333333
+"174","csci","Q99","Magnitude of largest annual storm","SB2","BothImpact",29,96.6666666666667
+"175","csci","SP_Mag","Spring recession magnitude","HB","NoImpact",1,2.5
+"176","csci","SP_Mag","Spring recession magnitude","HB","BioImpact",38,95
+"177","csci","SP_Mag","Spring recession magnitude","HB","BothImpact",1,2.5
+"178","csci","SP_Mag","Spring recession magnitude","NAT","NoImpact",92,42.3963133640553
+"179","csci","SP_Mag","Spring recession magnitude","NAT","BioImpact",35,16.1290322580645
+"180","csci","SP_Mag","Spring recession magnitude","NAT","HydroImpact",49,22.5806451612903
+"181","csci","SP_Mag","Spring recession magnitude","NAT","BothImpact",41,18.8940092165899
+"182","csci","SP_Mag","Spring recession magnitude","NATHigh","HydroImpact",92,30.4635761589404
+"183","csci","SP_Mag","Spring recession magnitude","NATHigh","BothImpact",210,69.5364238410596
+"184","csci","SP_Mag","Spring recession magnitude","NATLow","NoImpact",201,66.1184210526316
+"185","csci","SP_Mag","Spring recession magnitude","NATLow","BioImpact",84,27.6315789473684
+"186","csci","SP_Mag","Spring recession magnitude","NATLow","HydroImpact",9,2.96052631578947
+"187","csci","SP_Mag","Spring recession magnitude","NATLow","BothImpact",10,3.28947368421053
+"188","csci","SP_Mag","Spring recession magnitude","NATMed","NoImpact",93,30.5921052631579
+"189","csci","SP_Mag","Spring recession magnitude","NATMed","BioImpact",57,18.75
+"190","csci","SP_Mag","Spring recession magnitude","NATMed","HydroImpact",56,18.4210526315789
+"191","csci","SP_Mag","Spring recession magnitude","NATMed","BothImpact",98,32.2368421052632
+"192","csci","SP_Mag","Spring recession magnitude","SB0","BioImpact",2,25
+"193","csci","SP_Mag","Spring recession magnitude","SB0","BothImpact",6,75
+"194","csci","SP_Mag","Spring recession magnitude","SB2","BioImpact",26,86.6666666666667
+"195","csci","SP_Mag","Spring recession magnitude","SB2","BothImpact",4,13.3333333333333
+"196","csci","Wet_BFL_Mag_10","Wet-season low baseflow","HB","NoImpact",1,2.5
+"197","csci","Wet_BFL_Mag_10","Wet-season low baseflow","HB","BioImpact",16,40
+"198","csci","Wet_BFL_Mag_10","Wet-season low baseflow","HB","BothImpact",23,57.5
+"199","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NAT","NoImpact",115,52.9953917050691
+"200","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NAT","BioImpact",47,21.6589861751152
+"201","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NAT","HydroImpact",26,11.9815668202765
+"202","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NAT","BothImpact",29,13.3640552995392
+"203","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATLow","NoImpact",207,68.0921052631579
+"204","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATLow","BioImpact",70,23.0263157894737
+"205","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATLow","HydroImpact",3,0.986842105263158
+"206","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATLow","BothImpact",24,7.89473684210526
+"207","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATMed","NoImpact",117,38.4868421052632
+"208","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATMed","BioImpact",88,28.9473684210526
+"209","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATMed","HydroImpact",32,10.5263157894737
+"210","csci","Wet_BFL_Mag_10","Wet-season low baseflow","NATMed","BothImpact",67,22.0394736842105
+"211","csci","Wet_BFL_Mag_10","Wet-season low baseflow","SB0","BioImpact",8,100
+"212","csci","Wet_BFL_Mag_10","Wet-season low baseflow","SB2","BioImpact",25,83.3333333333333
+"213","csci","Wet_BFL_Mag_10","Wet-season low baseflow","SB2","BothImpact",5,16.6666666666667
+"214","csci","Wet_BFL_Mag_50","Wet-season median baseflow","HB","NoImpact",1,2.5
+"215","csci","Wet_BFL_Mag_50","Wet-season median baseflow","HB","BioImpact",36,90
+"216","csci","Wet_BFL_Mag_50","Wet-season median baseflow","HB","BothImpact",3,7.5
+"217","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NAT","NoImpact",84,38.7096774193548
+"218","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NAT","BioImpact",42,19.3548387096774
+"219","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NAT","HydroImpact",57,26.2672811059908
+"220","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NAT","BothImpact",34,15.668202764977
+"221","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","NoImpact",208,68.4210526315789
+"222","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","BioImpact",88,28.9473684210526
+"223","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","HydroImpact",2,0.657894736842105
+"224","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATLow","BothImpact",6,1.97368421052632
+"225","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATMed","NoImpact",85,27.9605263157895
+"226","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATMed","BioImpact",72,23.6842105263158
+"227","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATMed","HydroImpact",64,21.0526315789474
+"228","csci","Wet_BFL_Mag_50","Wet-season median baseflow","NATMed","BothImpact",83,27.3026315789474
+"229","csci","Wet_BFL_Mag_50","Wet-season median baseflow","SB0","BioImpact",8,100
+"230","csci","Wet_BFL_Mag_50","Wet-season median baseflow","SB2","BioImpact",26,86.6666666666667
+"231","csci","Wet_BFL_Mag_50","Wet-season median baseflow","SB2","BothImpact",4,13.3333333333333

@@ -1,5 +1,5 @@
-,Hydro_endpoint,Index,Flow.Metric.Name,Threshold,NoImpact,BioImpact,HydroImpact,BothImpact
-1,DS_Mag_50,csci,Dry-season median baseflow,HB,NA,25.00,2.50,72.50
-2,DS_Mag_50,csci,Dry-season median baseflow,NAT,58.53,24.88,6.45,10.14
-3,DS_Mag_50,csci,Dry-season median baseflow,SB0,NA,50.00,NA,50.00
-4,DS_Mag_50,csci,Dry-season median baseflow,SB2,NA,53.33,NA,46.67
+"","Hydro_endpoint","Index","Flow.Metric.Name","Threshold","NoImpact","BioImpact","HydroImpact","BothImpact"
+"1","DS_Mag_50","csci","Dry-season median baseflow","HB",NA,25,2.5,72.5
+"2","DS_Mag_50","csci","Dry-season median baseflow","NAT",58.5253456221198,24.8847926267281,6.45161290322581,10.1382488479263
+"3","DS_Mag_50","csci","Dry-season median baseflow","SB0",NA,50,NA,50
+"4","DS_Mag_50","csci","Dry-season median baseflow","SB2",NA,53.3333333333333,NA,46.6666666666667

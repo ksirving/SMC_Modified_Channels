@@ -5,6 +5,14 @@ library(tidylog)
 library(tidyverse)
 library(sf)
 
+library(mgcv)
+
+mcycle <- MASS::mcycle
+gam_mod <- mgcv::gam(accel ~ s(times), data=mcycle)
+
+# Extract the model coefficients
+coef(gam_mod)
+
 ## directory for figures
 out.dir <- "/Users/katieirving/OneDrive - SCCWRP/Documents - Katie’s MacBook Pro/git/SMC_Modified_Channels/Figures/"
 
@@ -13,6 +21,9 @@ out.dir <- "/Users/katieirving/OneDrive - SCCWRP/Documents - Katie’s MacBook P
 
 load(file = "output_data/00_bugs_algae_flow_joined_by_masterid.RData")
 head(AllData)
+
+## how many bio sites 
+length(unique(AllData$masterid))
 
 ## take only acsi h and csci
 AllDataLong2 <- AllData %>%
@@ -50,21 +61,24 @@ gam.lm <-lapply(1:nrow(bio_h_summary), function(i)
   mydat<-AllDataLong2 %>%
     filter(Metric == bmet,
            flow_metric == tmet) %>%
-    select(Metric, MetricValue, deltah_final, Class2) %>% ## only metrics needed
-    drop_na( deltah_final) %>%
+    select(Metric, MetricValue, deltah_final, Class2, channel_engineering_class) %>% ## only metrics needed
+    drop_na(deltah_final, MetricValue) %>%
     # filter(deltah_final > 0) %>%
     filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
     distinct()
   
-  
+  # mydat
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
   # try(glm(Condition~deltah_final, family=binomial(link="logit"), data=mydat), silent=T) ### glm
   
-  gam(MetricValue~s(deltah_final), family = Gamma(link = "log"), data = mydat)
+  gam(MetricValue~bs(deltah_final, knots = 6), family = Gamma(link = "log"), data = mydat)
+
+  # mgcv::gam(MetricValue~s(deltah_final, k=9), method = "REML", data = mydat)
   
   
 })
-gam.lm
+
+
 ## save models
 save(gam.lm, file = "output_data/01_csci_asci_all_gam_flow_combined_all.RData")
 
@@ -82,7 +96,7 @@ for(i in 1:length(gam.lm)) {
   #   
   
   mod <- summary(gam.lm[[i]])
-  
+  # coef(mod)
   bio_h_summary$AIC[i] <- mod$aic ##1-mod$deviance/mod$null.deviance ## mcfaddens r2
   bio_h_summary$PValue[i] <- mod$anova$`Pr(F)`[2]
   bio_h_summary$McFaddensR2[i] <- 1-mod$deviance/mod$null.deviance
@@ -100,8 +114,9 @@ bio_h_summary
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
-AllDataLong2
 i=1
+?gam.lm
+load(file = "output_data/01_csci_asci_all_gam_flow_combined_all.RData")
 ### get predictions and fitted values
 for(i in 1:length(gam.lm)) {
   
@@ -113,18 +128,19 @@ for(i in 1:length(gam.lm)) {
   
   
   ## get model, predict, extract all data and categories
-  mod <- gam.lm[[i]]
+  mod <- (gam.lm[[i]])
   predictedVals <- predict(mod,  type = "response")
-
-  DFX <- cbind(na.omit(mod$data), as.data.frame(predictedVals)) %>%
+  predictedVals
+  mod$model
+  DFX <- cbind(mod$data, as.data.frame(predictedVals)) %>%
     rename(Value = deltah_final) %>%
     mutate(Variable = tmet) 
   
   DF <- bind_rows(DF, DFX)
   
 }
-DF
-
+DFX
+mod$data
 ## change back to numeric
 DF <- DF %>%
   mutate(HydroValue = as.numeric(Value), BioValue = as.numeric(MetricValue),
@@ -133,12 +149,12 @@ DF <- DF %>%
   select(-Value, -MetricValue)
 
 str(DF)
-
+names(DF)
 ### predicted figures
 bio <- unique(DF$Metric)
-bio
+
 mets <- unique(DF$hydro.endpoints)
-DF
+b=1
 m=1
 
 for(b in 1:length(bio)) {
@@ -149,7 +165,7 @@ for(b in 1:length(bio)) {
   for(m in 1:length(mets)) {
     
     T1 <- (ggplot(subset(DF1, hydro.endpoints == mets[m]), aes(y=predictedVals, x=HydroValue)) +
-             # geom_point(size=0.2) +
+             geom_point(aes(x=HydroValue, y = BioValue, colour = channel_engineering_class)) +
              geom_line( linewidth = 1)+
              # stat_smooth(method = "lm", formula = y ~ x + I(x^2), linewidth = 1)+
              # geom_hline(yintercept = 0.6,  linetype="dashed", linewidth=0.5, color = "grey50") +
@@ -158,6 +174,7 @@ for(b in 1:length(bio)) {
              scale_y_continuous(name = paste0(bio[b], " Score"))) +
             theme_bw()
     # theme(legend.position = "none"))
+    T1
 
     file.name1 <- paste0(out.dir, "01_", bio[b], "_", mets[m], "_flow_response_predicted_gam_combined_all.jpg")
     ggsave(T1, filename=file.name1, dpi=300, height=5, width=7.5)
@@ -183,7 +200,7 @@ labels[25, 3] <- "Peak Flow Magnitude"
 labels
 
 
-## FIX NAMES TO MATCH LABELS AND LIMITS - Rachel 9/6
+## FIX NAMES TO MATCH LABELS AND LIMITS 
 dfx <- DF %>% 
   mutate(hydro.endpoints = case_when(hydro.endpoints == "d_ds_mag_50" ~ "DS_Mag_50",            
                                      hydro.endpoints == "d_fa_mag" ~ "FA_Mag",
@@ -204,36 +221,40 @@ head(all_data)
 
 # calculate thresholds ----------------------------------------------------
 
-### ASCI
 ## create df
-df <- as.data.frame(matrix(ncol=13))
-colnames(df) <- c("metric", "ThresholdNAT_Lower", "ThresholdNAT_Upper", "ThresholdHB_Lower", "ThresholdHB_Upper",
+df <- as.data.frame(matrix(ncol=19))
+colnames(df) <- c("metric", "ThresholdNAT_Lower", "ThresholdNAT_Upper", "ThresholdNATMed_Lower", "ThresholdNATMed_Upper",
+                  "ThresholdNATLow_Lower", "ThresholdNATLow_Upper",
+                  "ThresholdNATHigh_Lower", "ThresholdNATHigh_Upper", "ThresholdHB_Lower", "ThresholdHB_Upper",
                   "ThresholdSB0_Lower", "ThresholdSB0_Upper", "ThresholdSB2_Lower", "ThresholdSB2_Upper",
                   "n", "Index", "Hydro_endpoint", "CorObs_Pred")
 df
 
 ## define metrics
 metrics <- unique(all_data$comb_code_type)
-
 metrics
-
-i = 1
 ## loop through metrics
 for(i in 1: length(metrics)) {
   
   ## define metric
   met <- metrics[i]
+  
   ## filter by metric
   hydroxx <- all_data %>%
     filter(comb_code_type == met)
-  
+
   ## define thresholds - different for asci and csci
   if (hydroxx$Metric[1] == "asci") {
     
     ## get curves values at different probabilities
     threshNAT <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.86) 
     # threshNAT <- ifelse(length(threshNAT) == 0, NA, threshNAT)
-
+    threshNATMed <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.86)## sep ref threshold for overall tally
+    
+    threshNATLow <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.75) 
+    
+    threshNATHigh <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.94) 
+    
     threshHB <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.87) 
     # threshHB <- ifelse(length(threshHB) == 0, NA, threshHB)
     
@@ -242,7 +263,7 @@ for(i in 1: length(metrics)) {
     
     threshSB0 <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.79) 
     # threshSB0 <- ifelse(length(threshSB0) == 0, NA, threshSB0)
-    
+
     threshSB2 <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.76) 
     # threshSB2 <- ifelse(length(threshSB2) == 0, NA, threshSB2)
     
@@ -251,6 +272,12 @@ for(i in 1: length(metrics)) {
     ## get curves values at different probabilities
     threshNAT <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.79) 
     # threshNAT <- ifelse(length(threshNAT) == 0, NA, threshNAT)
+    
+    threshNATMed <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.79) ## sep ref threshold for overall tally
+    
+    threshNATLow <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.63) 
+    
+    threshNATHigh <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.92) 
     
     threshHB <- RootLinearInterpolant(hydroxx$HydroValue, hydroxx$predictedVals, 0.67) 
     # threshHB <- ifelse(length(threshHB) == 0, NA, threshHB)
@@ -271,31 +298,41 @@ for(i in 1: length(metrics)) {
   df[i, 1] <- met
   df[i, 2] <- threshNAT[1]
   df[i, 3] <- threshNAT[2]
-  df[i, 4] <- threshHB[1]
-  df[i, 5] <- threshHB[2]
-  df[i, 6] <- threshSB0[1]
-  df[i, 7] <- threshSB0[2]
-  df[i, 8] <- threshSB2[1]
-  df[i, 9] <- threshSB2[2]
-  df[i, 10] <- length(hydroxx$predictedVals)
-  df[i ,11] <- hydroxx$Metric[1]
-  df[i, 12] <- hydroxx$hydro.endpoints[1]
-  df[i, 13] <- cor(hydroxx$predictedVals, hydroxx$BioValue)
+  df[i, 4] <- threshNATMed[1]
+  df[i, 5] <- threshNATMed[2]
+  df[i, 6] <- threshNATLow[1]
+  df[i, 7] <- threshNATLow[2]
+  df[i, 8] <- threshNATHigh[1]
+  df[i, 9] <- threshNATHigh[2]
+  df[i, 10] <- threshHB[1]
+  df[i, 11] <- threshHB[2]
+  df[i, 12] <- threshSB0[1]
+  df[i, 13] <- threshSB0[2]
+  df[i, 14] <- threshSB2[1]
+  df[i, 15] <- threshSB2[2]
+  df[i, 16] <- length(hydroxx$predictedVals)
+  df[i ,17] <- hydroxx$Metric[1]
+  df[i, 18] <- hydroxx$hydro.endpoints[1]
+  df[i, 19] <- cor(hydroxx$predictedVals, hydroxx$BioValue)
   
 
   
 }
 
 hydroxx
-df
+df ## NAs - where curve doesn't reach threshold
 write.csv(df, "output_data/01_delta_thresholds_GAMs.csv")
 
 
-# format to apply data ----------------------------------------------------
-
+# format to apply data to categories----------------------------------------------------
+df <- read.csv("output_data/01_delta_thresholds_GAMs.csv")
 # add best observed thresholds
 ## apply one ffm - raw data
 ## how many modified channels are within thresholds
+
+## number of sites in each ffm
+## csci = 304
+## asci = 171
 
 head(df) ## thresholds
 
@@ -307,10 +344,16 @@ limits <- df %>%
   separate(Threshold, into=c("Threshold", "Type")) %>%
   mutate(Threshold = gsub("Threshold", "", Threshold)) %>%
   mutate(BioThresh = case_when((Index == "asci" & Threshold == "NAT") ~ 0.86, ## ad bio thresholds
+                               (Index == "asci" & Threshold == "NATMed") ~ 0.86,
+                               (Index == "asci" & Threshold == "NATLow") ~ 0.75,
+                               (Index == "asci" & Threshold == "NATHigh") ~ 0.94,
                                (Index == "asci" & Threshold == "HB") ~ 0.87,
                                (Index == "asci" & Threshold == "SB0") ~ 0.79,
                                (Index == "asci" & Threshold == "SB2") ~ 0.76,
                                (Index == "csci" & Threshold == "NAT") ~ 0.79,
+                               (Index == "csci" & Threshold == "NATMed") ~ 0.79,
+                               (Index == "csci" & Threshold == "NATLow") ~ 0.63,
+                               (Index == "csci" & Threshold == "NATHigh") ~ 0.92,
                                (Index == "csci" & Threshold == "HB") ~ 0.67,
                                (Index == "csci" & Threshold == "SB0") ~ 0.78,
                                (Index == "csci" & Threshold == "SB2") ~ 0.75))
@@ -320,12 +363,12 @@ limits
 ## make wider with type - lower/upper
 limits <- limits %>%
   pivot_wider(names_from = Type, values_from = DeltaH)    
-
-# joining labels table to limits - by hydroendpoints 
-limits <- left_join(limits, labels, by = c("Hydro_endpoint" = "hydro.endpoints"))
 limits
-
-write.csv(limits, "output_data/01_deltaH_limits.csv")
+# joining labels table to limits - by hydroendpoints 
+# limits <- left_join(limits, labels, by = c("Hydro_endpoint" = "hydro.endpoints"))
+# limits
+# 
+# write.csv(limits, "output_data/01_deltaH_limits_mod_classes.csv")
 
 ## data
 load(file = "output_data/00_bugs_algae_flow_joined_by_masterid.RData")
@@ -333,9 +376,9 @@ head(AllData)
 
 names(AllData)
 
-## take only acsi h and csci
+## take only acsi h and csci and rename to match columns
 AllDataLong2 <- AllData %>%
-  select(-X) %>%
+  select(-X, -Class2) %>%
   filter(Metric %in% c("csci", "asci")) %>%
   drop_na(deltah_final) %>%
   rename(Hydro_endpoint = hydro.endpoints,
@@ -343,22 +386,37 @@ AllDataLong2 <- AllData %>%
          Threshold = channel_engineering_class,
          IndexValue = MetricValue)
 
-## count ffm per class
-tallyFFM <- AllData %>%
-  group_by(channel_engineering_class) %>%
+AllDataLong2
+
+### sep df for overall thresholds - nat low/high
+
+AllDataLongOverall <- AllDataLong2 %>%
+  mutate(ThresholdNatLow = "NATLow", ThresholdNatMed = "NATMed", ThresholdNatHigh = "NATHigh") %>%
+  select(-c(Threshold)) %>%
+  pivot_longer(ThresholdNatLow:ThresholdNatHigh, names_to = "Check", values_to = "Threshold") %>%
+  select(-Check) 
+
+## join categorised and overall dfs together
+
+AllDF <- bind_rows(AllDataLongOverall, AllDataLong2) %>% distinct()
+class(AllDF)
+
+## count site per class with FFM
+tallyFFM <- AllDF %>%
+  group_by(Threshold) %>%
   select(masterid, COMID) %>%
   distinct() %>%
-  drop_na(channel_engineering_class) %>%
+  drop_na(Threshold) %>%
   tally()
 
 tallyFFM
 
 ## join limits to data
-names(AllDataLong2)
+names(AllDF)
 names(limits)
 
-allLims <- full_join(limits, AllDataLong2, by = c("Index", "Hydro_endpoint", "Threshold"))
-head(allLims)
+allLims <- full_join(limits, AllDF, by = c("Index", "Hydro_endpoint", "Threshold"), relationship = "many-to-many")
+names(allLims)
 names(imps)
 
 ## define if hydro is within mod limits & bio above threshold
@@ -370,10 +428,14 @@ imps <- allLims %>%
                             (WithinHydroLimits == "Within" & WithinBioLimits == "NotWithin") ~ "BioImpact", ##
                             (WithinHydroLimits == "NotWithin" & WithinBioLimits == "Within") ~ "HydroImpact",
                             (WithinHydroLimits == "NotWithin" & WithinBioLimits == "NotWithin") ~ "BothImpact")) %>%
-  mutate(Result = factor(Result, levels = c("NoImpact", "BioImpact", "HydroImpact", "BothImpact")))
+  mutate(Result = factor(Result, levels = c("NoImpact", "BioImpact", "HydroImpact", "BothImpact"))) # %>%
+  # select(-c(Flow.Metric.Name.y, Flow.Component.y)) %>%
+  # rename(Flow.Metric.Name = Flow.Metric.Name.x, Flow.Component = Flow.Component.x)
 
+write.csv(imps, "output_data/01_impact_ffm_bio.csv")
 
-  ## tally of imopact per ffm
+unique(imps$Threshold)
+  ## tally of impact per ffm
 
 tallyImpact <- imps %>%
   group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result) %>%
@@ -382,7 +444,13 @@ tallyImpact <- imps %>%
   drop_na(Result) %>%
   mutate(PercChans = (n/sum(n)*100))
   
-tallyImpact      
+tallyImpact
+
+write.csv(tallyImpact, "02_count_impact.csv")
+
+
+# Make tables for slides --------------------------------------------------
+
 
 ### make table for a couple of ffms
 
@@ -406,4 +474,65 @@ csciws <- tallyImpact %>%
 
 ## save out
 write.csv(csciws, "01_csci_ws_bfl_mag_50.csv")
+
+## column figures
+
+## test data
+data <- imps %>%
+  filter(Index == "csci", Hydro_endpoint == "DS_Mag_50", Result == "BothImpact") %>%
+  distinct()
+data
+cscids
+
+## dry season
+ds <- ggplot(cscids) +
+  geom_col(mapping = aes(y=BothImpact, x=Threshold, col = Threshold, fill = Threshold)) +
+  labs(x="Modified Channel Type", y= "Percent Channels") +
+  scale_y_continuous(limits = c(0,100)) +
+  theme(axis.title = element_text(size = 15,
+                                  face = "bold")) +
+  theme(axis.text = element_text(size = 12)) +
+  theme(legend.position = "none")
+ds
+file.name1 <- paste0(out.dir, "01_drySeason_column_perc_bothImpact.jpg")
+ggsave(ds, filename=file.name1, dpi=600, height=7, width=10)
+
+## wet season
+ws <- ggplot(csciws) +
+  geom_col(mapping = aes(y=BothImpact, x=Threshold, col = Threshold, fill = Threshold)) +
+  labs(x="Modified Channel Type", y="Percent Channels") +
+  scale_y_continuous(limits = c(0,100)) +
+  theme(axis.title = element_text(size = 15,
+                                 face = "bold")) +
+  theme(axis.text = element_text(size = 12)) +
+  theme(legend.position = "none")
+
+file.name1 <- paste0(out.dir, "01_wetSeason_column_perc_bothImpact.jpg")
+ggsave(ws, filename=file.name1, dpi=600, height=7, width=10)
+
+## map
+
+basemapsList <- c("Esri.WorldTopoMap", "Esri.WorldImagery",
+                  "Esri.NatGeoWorldMap",
+                  "OpenTopoMap", "OpenStreetMap", 
+                  "CartoDB.Positron", "Stamen.TopOSMFeatures")
+
+mapviewOptions(basemaps=basemapsList, fgb = FALSE)
+
+## filter dry season and make spatial
+impsx <- imps %>%
+  filter(Hydro_endpoint == "DS_Mag_50", Index == "csci",
+         Result == "BothImpact") %>%
+  st_as_sf(coords=c("longitude", "latitude"), crs=4326, remove=F)
+names(impsx)
+
+m1 <- mapview(impsx, zcol = "Threshold",  col.regions=c("red", "green", "orange", "blue"),
+              layer.name="Channel Type")
+
+
+m1@map %>% leaflet::addMeasure(primaryLengthUnit = "meters")
+# 
+mapshot(m1, url = paste0(getwd(), "/output_data/01_dry_season_bfl_channel_types_flow_problem.html"),
+        file = paste0(getwd(), "/ignore/01_dry_season_bfl_channel_types_flow_problem.png"))
+
          
