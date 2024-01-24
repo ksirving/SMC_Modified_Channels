@@ -1,5 +1,0 @@
-"","Hydro_endpoint","Index","Flow.Metric.Name","Threshold","NoImpact","BioImpact","HydroImpact","BothImpact"
-"1","Wet_BFL_Mag_50","csci","Wet-season median baseflow","HB",2.5,90,NA,7.5
-"2","Wet_BFL_Mag_50","csci","Wet-season median baseflow","NAT",38.2488479262673,19.3548387096774,26.7281105990783,15.668202764977
-"3","Wet_BFL_Mag_50","csci","Wet-season median baseflow","SB0",NA,100,NA,NA
-"4","Wet_BFL_Mag_50","csci","Wet-season median baseflow","SB2",NA,86.6666666666667,NA,13.3333333333333

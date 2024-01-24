@@ -1,0 +1,127 @@
+"","Index","FlowMetric","ModifiedClass","NoImpact","BioImpact","HydroImpact","BothImpact","Indeterminant","NumberSitesPerClass"
+"1","asci","Dry-season median baseflow","Hard Bottom",0,0,0,0,100,29
+"2","asci","Dry-season median baseflow","Natural",0,0,0,0,100,106
+"3","asci","Dry-season median baseflow","Overall 1st",0,0,0,0,100,171
+"4","asci","Dry-season median baseflow","Overall 30th",30.9941520467836,21.6374269005848,16.374269005848,30.9941520467836,0,171
+"5","asci","Dry-season median baseflow","Overall 10th",0,0,0,0,100,171
+"6","asci","Dry-season median baseflow","Soft Bottom (no hard sides)",0,0,0,0,100,4
+"7","asci","Dry-season median baseflow","Soft Bottom (two hard sides)",0,8.69565217391304,4.34782608695652,86.9565217391304,0,23
+"8","asci","Fall pulse magnitude","Hard Bottom",0,0,0,0,100,29
+"9","asci","Fall pulse magnitude","Natural",0,0,0,0,100,106
+"10","asci","Fall pulse magnitude","Overall 1st",0,0,0,0,100,171
+"11","asci","Fall pulse magnitude","Overall 30th",18.1286549707602,14.0350877192982,29.2397660818713,38.5964912280702,0,171
+"12","asci","Fall pulse magnitude","Overall 10th",0,0,0,0,100,171
+"13","asci","Fall pulse magnitude","Soft Bottom (no hard sides)",0,0,0,0,100,4
+"14","asci","Fall pulse magnitude","Soft Bottom (two hard sides)",0,0,0,0,100,23
+"15","asci","10-year flood magnitude","Hard Bottom",0,0,10.3448275862069,89.6551724137931,0,29
+"16","asci","10-year flood magnitude","Natural",0,0,38.6792452830189,59.4339622641509,1.88679245283019,106
+"17","asci","10-year flood magnitude","Overall 1st",0,0,15.2046783625731,83.6257309941521,1.16959064327485,171
+"18","asci","10-year flood magnitude","Overall 30th",0,0,11.6959064327485,24.5614035087719,63.7426900584795,171
+"19","asci","10-year flood magnitude","Overall 10th",0,0,28.0701754385965,70.7602339181287,1.16959064327485,171
+"20","asci","10-year flood magnitude","Soft Bottom (no hard sides)",0,0,25,75,0,4
+"21","asci","10-year flood magnitude","Soft Bottom (two hard sides)",0,0,4.34782608695652,69.5652173913043,26.0869565217391,23
+"22","asci","2-year flood magnitude","Hard Bottom",0,0,10.3448275862069,89.6551724137931,0,29
+"23","asci","2-year flood magnitude","Natural",0,0,38.6792452830189,59.4339622641509,1.88679245283019,106
+"24","asci","2-year flood magnitude","Overall 1st",0,0,0,0,100,171
+"25","asci","2-year flood magnitude","Overall 30th",0,0,20.4678362573099,28.6549707602339,50.8771929824561,171
+"26","asci","2-year flood magnitude","Overall 10th",0,0,28.0701754385965,70.7602339181287,1.16959064327485,171
+"27","asci","2-year flood magnitude","Soft Bottom (no hard sides)",0,0,0,50,50,4
+"28","asci","2-year flood magnitude","Soft Bottom (two hard sides)",0,0,4.34782608695652,95.6521739130435,0,23
+"29","asci","5-year flood magnitude","Hard Bottom",0,0,10.3448275862069,89.6551724137931,0,29
+"30","asci","5-year flood magnitude","Natural",0,0,38.6792452830189,59.4339622641509,1.88679245283019,106
+"31","asci","5-year flood magnitude","Overall 1st",0,0,15.2046783625731,83.6257309941521,1.16959064327485,171
+"32","asci","5-year flood magnitude","Overall 30th",0,0,12.280701754386,25.7309941520468,61.9883040935673,171
+"33","asci","5-year flood magnitude","Overall 10th",0,0,28.0701754385965,70.7602339181287,1.16959064327485,171
+"34","asci","5-year flood magnitude","Soft Bottom (no hard sides)",0,0,0,50,50,4
+"35","asci","5-year flood magnitude","Soft Bottom (two hard sides)",0,0,4.34782608695652,56.5217391304348,39.1304347826087,23
+"36","asci","Magnitude of largest annual storm","Hard Bottom",0,0,10.3448275862069,89.6551724137931,0,29
+"37","asci","Magnitude of largest annual storm","Natural",0,0,38.6792452830189,59.4339622641509,1.88679245283019,106
+"38","asci","Magnitude of largest annual storm","Overall 1st",0,0,15.2046783625731,83.6257309941521,1.16959064327485,171
+"39","asci","Magnitude of largest annual storm","Overall 30th",0,0,10.5263157894737,27.4853801169591,61.9883040935673,171
+"40","asci","Magnitude of largest annual storm","Overall 10th",0,0,28.0701754385965,70.7602339181287,1.16959064327485,171
+"41","asci","Magnitude of largest annual storm","Soft Bottom (no hard sides)",0,0,0,50,50,4
+"42","asci","Magnitude of largest annual storm","Soft Bottom (two hard sides)",0,0,4.34782608695652,60.8695652173913,34.7826086956522,23
+"43","asci","Spring recession magnitude","Hard Bottom",0,0,10.3448275862069,89.6551724137931,0,29
+"44","asci","Spring recession magnitude","Natural",0,0,38.6792452830189,59.4339622641509,1.88679245283019,106
+"45","asci","Spring recession magnitude","Overall 1st",0,0,15.2046783625731,83.6257309941521,1.16959064327485,171
+"46","asci","Spring recession magnitude","Overall 30th",16.9590643274854,10.5263157894737,30.4093567251462,42.1052631578947,0,171
+"47","asci","Spring recession magnitude","Overall 10th",0,0,28.0701754385965,70.7602339181287,1.16959064327485,171
+"48","asci","Spring recession magnitude","Soft Bottom (no hard sides)",0,0,25,75,0,4
+"49","asci","Spring recession magnitude","Soft Bottom (two hard sides)",0,0,4.34782608695652,95.6521739130435,0,23
+"50","asci","Wet-season low baseflow","Hard Bottom",0,0,0,0,100,29
+"51","asci","Wet-season low baseflow","Natural",0,0,0,0,100,106
+"52","asci","Wet-season low baseflow","Overall 1st",0,0,0,0,100,171
+"53","asci","Wet-season low baseflow","Overall 30th",0,0,0,0,100,171
+"54","asci","Wet-season low baseflow","Overall 10th",0,0,0,0,100,171
+"55","asci","Wet-season low baseflow","Soft Bottom (no hard sides)",0,0,0,0,100,4
+"56","asci","Wet-season low baseflow","Soft Bottom (two hard sides)",0,0,0,0,100,23
+"57","asci","Wet-season median baseflow","Hard Bottom",0,0,0,0,100,29
+"58","asci","Wet-season median baseflow","Natural",0,0,0,0,100,106
+"59","asci","Wet-season median baseflow","Overall 1st",0,0,0,0,100,171
+"60","asci","Wet-season median baseflow","Overall 30th",5.26315789473684,4.09356725146199,42.1052631578947,48.5380116959064,0,171
+"61","asci","Wet-season median baseflow","Overall 10th",0,0,0,0,100,171
+"62","asci","Wet-season median baseflow","Soft Bottom (no hard sides)",0,0,25,75,0,4
+"63","asci","Wet-season median baseflow","Soft Bottom (two hard sides)",0,0,4.34782608695652,95.6521739130435,0,23
+"64","csci","Dry-season median baseflow","Hard Bottom",0,25,2.5,72.5,0,40
+"65","csci","Dry-season median baseflow","Natural",58.5253456221198,24.8847926267281,6.45161290322581,10.1382488479263,0,217
+"66","csci","Dry-season median baseflow","Overall 1st",0,0,0,0,100,304
+"67","csci","Dry-season median baseflow","Overall 30th",66.1184210526316,18.4210526315789,2.96052631578947,12.5,0,304
+"68","csci","Dry-season median baseflow","Overall 10th",44.078947368421,26.6447368421053,4.93421052631579,24.3421052631579,0,304
+"69","csci","Dry-season median baseflow","Soft Bottom (no hard sides)",0,50,0,50,0,8
+"70","csci","Dry-season median baseflow","Soft Bottom (two hard sides)",0,53.3333333333333,0,46.6666666666667,0,30
+"71","csci","Fall pulse magnitude","Hard Bottom",2.5,45,0,52.5,0,40
+"72","csci","Fall pulse magnitude","Natural",58.5253456221198,27.6497695852535,6.45161290322581,7.37327188940092,0,217
+"73","csci","Fall pulse magnitude","Overall 1st",0,0,0,0,100,304
+"74","csci","Fall pulse magnitude","Overall 30th",0,0,68.0921052631579,21.7105263157895,10.1973684210526,304
+"75","csci","Fall pulse magnitude","Overall 10th",44.078947368421,30.2631578947368,4.93421052631579,20.7236842105263,0,304
+"76","csci","Fall pulse magnitude","Soft Bottom (no hard sides)",0,75,0,25,0,8
+"77","csci","Fall pulse magnitude","Soft Bottom (two hard sides)",0,83.3333333333333,0,16.6666666666667,0,30
+"78","csci","10-year flood magnitude","Hard Bottom",0,0,2.5,62.5,35,40
+"79","csci","10-year flood magnitude","Natural",0,0,8.29493087557604,10.5990783410138,81.1059907834101,217
+"80","csci","10-year flood magnitude","Overall 1st",0,0,29.2763157894737,68.0921052631579,2.63157894736842,304
+"81","csci","10-year flood magnitude","Overall 30th",0,0,3.28947368421053,10.5263157894737,86.1842105263158,304
+"82","csci","10-year flood magnitude","Overall 10th",0,0,6.57894736842105,26.6447368421053,66.7763157894737,304
+"83","csci","10-year flood magnitude","Soft Bottom (no hard sides)",0,0,0,75,25,8
+"84","csci","10-year flood magnitude","Soft Bottom (two hard sides)",0,0,0,73.3333333333333,26.6666666666667,30
+"85","csci","2-year flood magnitude","Hard Bottom",0,0,2.5,15,82.5,40
+"86","csci","2-year flood magnitude","Natural",45.6221198156682,18.8940092165899,19.3548387096774,16.1290322580645,0,217
+"87","csci","2-year flood magnitude","Overall 1st",0,0,0,0,100,304
+"88","csci","2-year flood magnitude","Overall 30th",0,0,3.28947368421053,4.27631578947368,92.4342105263158,304
+"89","csci","2-year flood magnitude","Overall 10th",34.5394736842105,23.0263157894737,14.4736842105263,27.9605263157895,0,304
+"90","csci","2-year flood magnitude","Soft Bottom (no hard sides)",0,0,0,75,25,8
+"91","csci","2-year flood magnitude","Soft Bottom (two hard sides)",0,0,0,13.3333333333333,86.6666666666667,30
+"92","csci","5-year flood magnitude","Hard Bottom",0,0,2.5,52.5,45,40
+"93","csci","5-year flood magnitude","Natural",0,0,10.1382488479263,10.5990783410138,79.2626728110599,217
+"94","csci","5-year flood magnitude","Overall 1st",0,0,29.6052631578947,69.0789473684211,1.31578947368421,304
+"95","csci","5-year flood magnitude","Overall 30th",0,0,3.94736842105263,11.1842105263158,84.8684210526316,304
+"96","csci","5-year flood magnitude","Overall 10th",0,0,7.56578947368421,25,67.4342105263158,304
+"97","csci","5-year flood magnitude","Soft Bottom (no hard sides)",0,0,0,75,25,8
+"98","csci","5-year flood magnitude","Soft Bottom (two hard sides)",0,0,0,40,60,30
+"99","csci","Magnitude of largest annual storm","Hard Bottom",0,0,2.5,97.5,0,40
+"100","csci","Magnitude of largest annual storm","Natural",0,0,10.1382488479263,10.1382488479263,79.7235023041475,217
+"101","csci","Magnitude of largest annual storm","Overall 1st",0,0,29.6052631578947,69.0789473684211,1.31578947368421,304
+"102","csci","Magnitude of largest annual storm","Overall 30th",0.657894736842105,0,68.4210526315789,30.9210526315789,0,304
+"103","csci","Magnitude of largest annual storm","Overall 10th",0,0,9.21052631578947,26.6447368421053,64.1447368421053,304
+"104","csci","Magnitude of largest annual storm","Soft Bottom (no hard sides)",0,0,0,50,50,8
+"105","csci","Magnitude of largest annual storm","Soft Bottom (two hard sides)",0,3.33333333333333,0,96.6666666666667,0,30
+"106","csci","Spring recession magnitude","Hard Bottom",2.5,95,0,2.5,0,40
+"107","csci","Spring recession magnitude","Natural",42.3963133640553,16.1290322580645,22.5806451612903,18.8940092165899,0,217
+"108","csci","Spring recession magnitude","Overall 1st",0,0,30.2631578947368,69.0789473684211,0.657894736842105,304
+"109","csci","Spring recession magnitude","Overall 30th",66.1184210526316,27.6315789473684,2.96052631578947,3.28947368421053,0,304
+"110","csci","Spring recession magnitude","Overall 10th",30.5921052631579,18.75,18.4210526315789,32.2368421052632,0,304
+"111","csci","Spring recession magnitude","Soft Bottom (no hard sides)",0,25,0,75,0,8
+"112","csci","Spring recession magnitude","Soft Bottom (two hard sides)",0,86.6666666666667,0,13.3333333333333,0,30
+"113","csci","Wet-season low baseflow","Hard Bottom",2.5,40,0,57.5,0,40
+"114","csci","Wet-season low baseflow","Natural",52.9953917050691,21.6589861751152,11.9815668202765,13.3640552995392,0,217
+"115","csci","Wet-season low baseflow","Overall 1st",0,0,0,0,100,304
+"116","csci","Wet-season low baseflow","Overall 30th",68.0921052631579,23.0263157894737,0.986842105263158,7.89473684210526,0,304
+"117","csci","Wet-season low baseflow","Overall 10th",38.4868421052632,28.9473684210526,10.5263157894737,22.0394736842105,0,304
+"118","csci","Wet-season low baseflow","Soft Bottom (no hard sides)",0,100,0,0,0,8
+"119","csci","Wet-season low baseflow","Soft Bottom (two hard sides)",0,83.3333333333333,0,16.6666666666667,0,30
+"120","csci","Wet-season median baseflow","Hard Bottom",2.5,90,0,7.5,0,40
+"121","csci","Wet-season median baseflow","Natural",38.7096774193548,19.3548387096774,26.2672811059908,15.668202764977,0,217
+"122","csci","Wet-season median baseflow","Overall 1st",0,0,0,0,100,304
+"123","csci","Wet-season median baseflow","Overall 30th",68.4210526315789,28.9473684210526,0.657894736842105,1.97368421052632,0,304
+"124","csci","Wet-season median baseflow","Overall 10th",27.9605263157895,23.6842105263158,21.0526315789474,27.3026315789474,0,304
+"125","csci","Wet-season median baseflow","Soft Bottom (no hard sides)",0,100,0,0,0,8
+"126","csci","Wet-season median baseflow","Soft Bottom (two hard sides)",0,86.6666666666667,0,13.3333333333333,0,30
