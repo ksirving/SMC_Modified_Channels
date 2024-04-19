@@ -79,6 +79,7 @@ tallyFFMClass
 
 bioSites <- st_read("input_data/01_bio_sites_all.shp")
 head(bioSites)
+dim(bioSites)
 
 # set background basemaps:
 basemapsList <- c("Esri.WorldTopoMap", "Esri.WorldImagery",

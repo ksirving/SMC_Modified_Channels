@@ -7,12 +7,6 @@ library(sf)
 
 library(mgcv)
 
-mcycle <- MASS::mcycle
-gam_mod <- mgcv::gam(accel ~ s(times), data=mcycle)
-
-# Extract the model coefficients
-coef(gam_mod)
-
 ## directory for figures
 out.dir <- "/Users/katieirving/OneDrive - SCCWRP/Documents - Katie’s MacBook Pro/git/SMC_Modified_Channels/Figures/"
 
@@ -71,9 +65,10 @@ gam.lm <-lapply(1:nrow(bio_h_summary), function(i)
   mydat<-mydat[order(mydat$MetricValue),] ## order by csci value
   # try(glm(Condition~deltah_final, family=binomial(link="logit"), data=mydat), silent=T) ### glm
   
-  gam(MetricValue~bs(deltah_final, knots = 6), family = Gamma(link = "log"), data = mydat)
+  # gam(MetricValue~bs(deltah_final, knots = 6), family = Gamma(link = "log"), data = mydat)
+  # gam(MetricValue~s(deltah_final, 6), family = Gamma(link = "log"), data = mydat)
 
-  # mgcv::gam(MetricValue~s(deltah_final, k=9), method = "REML", data = mydat)
+   mgcv::gam(MetricValue~s(deltah_final, k=6),  data = mydat)
   
   
 })
@@ -81,25 +76,27 @@ gam.lm <-lapply(1:nrow(bio_h_summary), function(i)
 
 ## save models
 save(gam.lm, file = "output_data/01_csci_asci_all_gam_flow_combined_all.RData")
-
+gam.lm
 ### get rsqds and pvals
 
 for(i in 1:length(gam.lm)) {
   
-  # if (class(gam.lm[[i]]) == "try-error") {
-  #   
-  #   # mod <- summary(log.lm[[i]])
-  #   bio_h_summary$AIC[i] <- NA ##1-mod$deviance/mod$null.deviance ## mcfaddens r2
-  #   bio_h_summary$PValue[i] <- NA
-  #   bio_h_summary$McFaddensR2[i] <- NA
-  #   bio_h_summary$n[i] <- NA
-  #   
+  mod <- gam.lm[[i]]
+  modx <- summary(mod)
+
+  bio_h_summary$AIC[i] <- mod$aic 
+  bio_h_summary$EDF[i] <-  modx$s.table[1] ## effective degrees of freedom
   
-  mod <- summary(gam.lm[[i]])
+  bio_h_summary$PValue[i] <- modx$s.table[4] ## pvalue
+  bio_h_summary$McFaddensR2[i] <- 1-mod$deviance/mod$null.deviance ## r2
+  
+  # mod <- summary(gam.lm[[i]])
+  # mod$p.table
+  
   # coef(mod)
-  bio_h_summary$AIC[i] <- mod$aic ##1-mod$deviance/mod$null.deviance ## mcfaddens r2
-  bio_h_summary$PValue[i] <- mod$anova$`Pr(F)`[2]
-  bio_h_summary$McFaddensR2[i] <- 1-mod$deviance/mod$null.deviance
+  # bio_h_summary$AIC[i] <- mod$aic ##1-mod$deviance/mod$null.deviance ## mcfaddens r2
+  # bio_h_summary$PValue[i] <- mod$anova$`Pr(F)`[2]
+  # bio_h_summary$McFaddensR2[i] <- 1-mod$deviance/mod$null.deviance
   # bio_h_summary$n[i] <- mod$df[2]+1
   
   
@@ -114,9 +111,8 @@ bio_h_summary
 ## blank df
 DF <- NULL
 DF <- as.data.frame(DF)
-i=1
-?gam.lm
-load(file = "output_data/01_csci_asci_all_gam_flow_combined_all.RData")
+
+# load(file = "output_data/01_csci_asci_all_gam_flow_combined_all.RData")
 ### get predictions and fitted values
 for(i in 1:length(gam.lm)) {
   
@@ -125,31 +121,39 @@ for(i in 1:length(gam.lm)) {
   # dmet<-as.character(bio_h_summary[i,"Direction.alt"])
   # cmet<-as.character(bio_h_summary[i,"channel.type"])
   
+  mydat<-AllDataLong2 %>%
+    filter(Metric == bmet,
+           flow_metric == tmet) %>%
+    select(Metric, MetricValue, deltah_final, Class2, channel_engineering_class) %>% ## only metrics needed
+    drop_na(deltah_final, MetricValue) %>%
+    # filter(deltah_final > 0) %>%
+    filter_all(all_vars(!is.infinite(.))) %>% ## remove all missing values
+    distinct()
   
   
   ## get model, predict, extract all data and categories
-  mod <- (gam.lm[[i]])
+  mod <- gam.lm[[i]]
   predictedVals <- predict(mod,  type = "response")
-  predictedVals
-  mod$model
-  DFX <- cbind(mod$data, as.data.frame(predictedVals)) %>%
-    rename(Value = deltah_final) %>%
-    mutate(Variable = tmet) 
+
+  DFX <- cbind(mydat, as.data.frame(predictedVals)) %>%
+    # rename(Value = deltah_final) %>%
+    mutate(Variable = tmet, Metric = bmet) 
   
   DF <- bind_rows(DF, DFX)
   
 }
 DFX
-mod$data
+
 ## change back to numeric
 DF <- DF %>%
-  mutate(HydroValue = as.numeric(Value), BioValue = as.numeric(MetricValue),
+  mutate(HydroValue = as.numeric(deltah_final), BioValue = as.numeric(MetricValue),
          predictedVals = as.numeric(predictedVals)) %>%
-  rename(hydro.endpoints = Variable) %>%
-  select(-Value, -MetricValue)
+  rename(hydro.endpoints = Variable) 
 
 str(DF)
 names(DF)
+head(DF)
+
 ### predicted figures
 bio <- unique(DF$Metric)
 
@@ -434,6 +438,8 @@ imps <- allLims %>%
 
 write.csv(imps, "output_data/01_impact_ffm_bio.csv")
 
+
+
 unique(imps$Threshold)
   ## tally of impact per ffm
 
@@ -448,45 +454,52 @@ tallyImpact
 
 write.csv(tallyImpact, "02_count_impact.csv")
 
+tallyImpact <- read.csv("output_data/02_count_impact.csv")
 
 # Make tables for slides --------------------------------------------------
 
+## use ggmap to get google 
+library(ggmap)
+library("ggsci")
+
+tallyImpact <- read.csv("output_data/03_percent_impacts_each_Class.csv")
+tallyImpact
 
 ### make table for a couple of ffms
 
 ## csci and ds mag 50
 cscids
 cscids <- tallyImpact %>%
-  filter(Index == "csci", Hydro_endpoint == "DS_Mag_50") %>%
-  select(-n) %>%
-  pivot_wider(names_from = Result, values_from = PercChans) %>%
-  select(Index, Flow.Metric.Name, Threshold, NoImpact, BioImpact:BothImpact)
+  filter(Index == "csci", FlowMetric == "Dry-season median baseflow") %>%
+  select(-X, - NumberSitesPerClass) %>%
+  # pivot_wider(names_from = Result, values_from = PercChans) %>%
+  select(Index, FlowMetric, ModifiedClass, NoImpact, BioImpact:BothImpact) %>%
+  filter(ModifiedClass %in% c("Natural", "Hard Bottom", "Soft Bottom (no hard sides)", "Soft Bottom (two hard sides)")) %>%
+  mutate(ModifiedClass = factor(ModifiedClass, 
+                                levels = c("Natural", "Hard Bottom", "Soft Bottom (no hard sides)", "Soft Bottom (two hard sides)"),
+                                labels = c("Natural", "Hard Bottom", "Soft Bottom (0)", "Soft Bottom (2)")))
 
 ## save out
-write.csv(cscids, "01_csci_ds_mag_50.csv")
+# write.csv(cscids, "01_csci_ds_mag_50.csv")
 
-## csci & wet season
-csciws <- tallyImpact %>%
-  filter(Index == "csci", Hydro_endpoint == "Wet_BFL_Mag_50") %>%
-  select(-n) %>%
-  pivot_wider(names_from = Result, values_from = PercChans) %>%
-  select(Index, Flow.Metric.Name, Threshold, NoImpact, BioImpact, HydroImpact, BothImpact)
+## wet season
 
-## save out
-write.csv(csciws, "01_csci_ws_bfl_mag_50.csv")
-
-## column figures
-
-## test data
-data <- imps %>%
-  filter(Index == "csci", Hydro_endpoint == "DS_Mag_50", Result == "BothImpact") %>%
-  distinct()
-data
+ csciws <- tallyImpact %>%
+  filter(Index == "csci", FlowMetric == "Wet-season median baseflow") %>%
+  select(-X, - NumberSitesPerClass) %>%
+  # pivot_wider(names_from = Result, values_from = PercChans) %>%
+  select(Index, FlowMetric, ModifiedClass, NoImpact, BioImpact:BothImpact) %>%
+  filter(ModifiedClass %in% c("Natural", "Hard Bottom", "Soft Bottom (no hard sides)", "Soft Bottom (two hard sides)")) %>%
+  mutate(ModifiedClass = factor(ModifiedClass, 
+                                levels = c("Natural", "Hard Bottom", "Soft Bottom (no hard sides)", "Soft Bottom (two hard sides)"),
+                                labels = c("Natural", "Hard Bottom", "Soft Bottom (0)", "Soft Bottom (2)")))
+csciws
 cscids
 
 ## dry season
 ds <- ggplot(cscids) +
-  geom_col(mapping = aes(y=BothImpact, x=Threshold, col = Threshold, fill = Threshold)) +
+  geom_col(mapping = aes(y=BothImpact, x=ModifiedClass, col = ModifiedClass, fill = ModifiedClass)) +
+  scale_color_jco(name = "Modified Class") +
   labs(x="Modified Channel Type", y= "Percent Channels") +
   scale_y_continuous(limits = c(0,100)) +
   theme(axis.title = element_text(size = 15,
@@ -499,17 +512,50 @@ ggsave(ds, filename=file.name1, dpi=600, height=7, width=10)
 
 ## wet season
 ws <- ggplot(csciws) +
-  geom_col(mapping = aes(y=BothImpact, x=Threshold, col = Threshold, fill = Threshold)) +
-  labs(x="Modified Channel Type", y="Percent Channels") +
+  geom_col(mapping = aes(y=BothImpact, x=ModifiedClass, col = ModifiedClass, fill = ModifiedClass)) +
+  scale_color_jco(name = "Modified Class") +
+  labs(x="Modified Channel Type", y= "Percent Channels") +
   scale_y_continuous(limits = c(0,100)) +
   theme(axis.title = element_text(size = 15,
-                                 face = "bold")) +
+                                  face = "bold")) +
   theme(axis.text = element_text(size = 12)) +
   theme(legend.position = "none")
-
+ws
 file.name1 <- paste0(out.dir, "01_wetSeason_column_perc_bothImpact.jpg")
 ggsave(ws, filename=file.name1, dpi=600, height=7, width=10)
 
+### stacked columns
+
+## join ds and ws together
+
+head(tallyImpact)
+
+tallyImpactx <- tallyImpact %>%
+  select(-NumberSitesPerClass, -X) %>%
+  filter(Index == "csci") %>%
+  filter(ModifiedClass %in% c("Natural", "Hard Bottom", "Soft Bottom (no hard sides)", "Soft Bottom (two hard sides)")) %>%
+  mutate(ModifiedClass = factor(ModifiedClass, 
+                                levels = c("Natural", "Hard Bottom", "Soft Bottom (no hard sides)", "Soft Bottom (two hard sides)"),
+                                labels = c("Natural", "Hard Bottom", "Soft Bottom (0)", "Soft Bottom (2)"))) %>%
+  pivot_longer(NoImpact:BothImpact, names_to = "Result", values_to = "PercChans") %>%
+  mutate(Result = factor(Result, levels = c("NoImpact", "BioImpact", "HydroImpact", "BothImpact"), 
+                         labels = c("Bio & Flow Within Range", "Low Bio", "Altered Flow", "Low Bio & Altered Flow")))
+tallyImpactx
+
+
+a1 <- ggplot(tallyImpactx, aes(fill=Result, y=PercChans, x=ModifiedClass)) + 
+  geom_bar(position="stack", stat="identity") +
+  facet_wrap(~FlowMetric) +
+  scale_fill_jco(name = "Category") +
+  scale_y_continuous(name = "Sites (%)")
+
+a1
+
+file.name1 <- paste0(out.dir, "01_all_hydro_stacked_perc.jpg")
+ggsave(a1, filename=file.name1, dpi=600, height=7, width=10)
+
+
+tallyImpactxLong
 ## map
 
 basemapsList <- c("Esri.WorldTopoMap", "Esri.WorldImagery",

@@ -17,11 +17,11 @@ out.dir <- "/Users/katieirving/OneDrive - SCCWRP/Documents - Katie’s MacBook P
 # Upload Data -------------------------------------------------------------
 
 ## within limits doc
-imps <- read.csv("output_data/01_impact_ffm_bio.csv") %>%
+imps <- read.csv("output_data/03_impact_ffm_bio.csv") %>%
   select( -X)
 
 ## tally of categories
-tal <- read.csv("02_count_impact.csv")
+tal <- read.csv("output_data/03_count_impact.csv")
 
 
 # Format and explore ------------------------------------------------------
@@ -54,7 +54,7 @@ dim(impx)
 ## tally of impact per ffm - with the indeterminant categories
 
 tallyImpact <- impx %>%
-  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result) %>%
+  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result, SmoothingFunc) %>%
   distinct() %>%
   tally() %>%
   drop_na(Result) %>%
@@ -77,14 +77,14 @@ impx1 <- imps %>%
                              is.na(WithinHydroLimits) & WithinBioLimits == "Within" ~ NA)) %>%
   mutate(Result = ifelse(is.na(Result), Result2, Result))
 
-impx1
+names(impx1)
 
 ## Tally Result categories
 
 ## tally of impact per ffm - with the indeterminant categories
 
 tallyImpact1 <- impx1 %>%
-  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result) %>%
+  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result, SmoothingFunc) %>%
   distinct() %>%
   tally() %>%
   drop_na(Result) %>%
@@ -115,7 +115,7 @@ names(impx2)
 ## tally of impact per ffm - with the indeterminant categories
 
 tallyImpact2 <- impx2 %>%
-  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result) %>%
+  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result, SmoothingFunc) %>%
   distinct() %>%
   tally() %>%
   drop_na(Result) %>%
@@ -128,9 +128,9 @@ class(tallyImpact2$Threshold)
 unique(tallyImpact2$Threshold)
 
 ## change order of cols, rename cols, change names of modified streams calss
-FinalTablex <- tallyImpact2 %>%
+FinalTablex <- tallyImpact1 %>% ## using option with least NAs
   ungroup() %>%
-  select(Index, Flow.Metric.Name, Threshold, Result, PercChans, n) %>%
+  select(Index, Flow.Metric.Name, SmoothingFunc, Threshold, Result, PercChans, n) %>%
   rename(FlowMetric = Flow.Metric.Name, ModifiedClass = Threshold, Impact = Result, NumberOfSites = n, PercentageOfSites = PercChans) %>%
   mutate(ModifiedClass = case_when((ModifiedClass == "HB") ~ "Hard Bottom",
                                       (ModifiedClass == "NAT") ~ "Natural",
@@ -140,10 +140,10 @@ FinalTablex <- tallyImpact2 %>%
                                       (ModifiedClass == "SB0") ~ "Soft Bottom (no hard sides)",
                                       (ModifiedClass == "SB2") ~ "Soft Bottom (two hard sides)"))
          
-        
+FinalTablex    
 ## get total sites per class
 sums <- FinalTablex %>%
-  group_by(Index, FlowMetric, ModifiedClass) %>%
+  group_by(Index, FlowMetric, ModifiedClass, SmoothingFunc) %>%
   summarise(NumberSitesPerClass = sum(NumberOfSites))
 
 sums
@@ -151,17 +151,31 @@ sums
 ## pivot impact results wider
 FinalTable <- FinalTablex %>%  
   select(-NumberOfSites) %>%
+  filter(SmoothingFunc == 6) %>% ## change later!
   pivot_wider(names_from = Impact, values_from = PercentageOfSites) %>%
   mutate(across(everything(), .fns = ~replace_na(.,0))) %>%
-  select(Index:ModifiedClass, NoImpact, BioImpact, HydroImpact, BothImpact, Indeterminant)
+  select(Index:ModifiedClass, NoImpact, BioImpact, HydroImpact, BothImpact)
 
 ## join number of sites
 
-FinalTable <- full_join(FinalTable, sums, by = c("Index", "FlowMetric", "ModifiedClass"))
+FinalTable <- full_join(FinalTable, sums, by = c("Index", "FlowMetric", "ModifiedClass", "SmoothingFunc"))
+FinalTable
 
 ## save out
 
 write.csv(FinalTable, "output_data/03_percent_impacts_each_Class.csv")
+
+## table with columns as channel class
+
+FinalTableWide <- FinalTablex %>%
+  select(-NumberOfSites) %>%
+  pivot_wider(names_from = ModifiedClass, values_from = PercentageOfSites) %>%
+  mutate(across(everything(), .fns = ~replace_na(.,0))) #%>%
+  # select(-)
+
+  FinalTableWide
+  
+  write.csv(FinalTableWide, "output_data/03_percent_impacts_each_Class_wide.csv")
 
 # Map results -------------------------------------------------------------
 
@@ -178,14 +192,15 @@ head(impx2)
 
 ## make spatial
 
-imps_sf <- impx2 %>% 
+imps_sf <- impx1 %>% 
   # st_as_sf(coords=c( "longitude", "latitude"), crs=4326, remove=F) %>%
   # st_transform(crs = st_crs(socal)) %>%
-  select(Index, Hydro_endpoint, Threshold, BioThresh, masterid, COMID, Flow.Metric.Name, Flow.Component, Result, longitude, latitude)  %>%
+  select(Index, Hydro_endpoint, Threshold, BioThresh, SmoothingFunc, masterid, COMID, Flow.Metric.Name, Flow.Component, Result, longitude, latitude)  %>%
   mutate(Threshold = as.factor(Threshold), Result = as.factor(Result))
 
 ## for now remove indeterminant
-imps_sf <- imps_sf %>% filter(!Result == "Indeterminant", !Threshold %in% c("NATLow", "NATMed", "NATHigh")) 
+imps_sf <- imps_sf %>% 
+  filter(!Result == "Indeterminant", Index == "csci") 
 imps_sf
 
 ## use ggmap to get google 
@@ -193,8 +208,7 @@ library(ggmap)
 library("ggsci")
 
 ## register google key 
-
-# register_google(key = "AIzaSyAw_NxwCkndAGk0x9y4ADJTqRsWAzzyL6s")
+## in notes
 
 # Philadelphia Lat 39.95258 and Lon is -75.16522
 # basemap <- get_map(location=c(lon = -119.2742, lat = 34.41183), zoom=11, maptype = 'terrain-background', source = 'stamen')
@@ -203,32 +217,85 @@ library("ggsci")
 # ?get_googlemap
 # print(basemap)
 
-save(basemap, file = "Figures/03_basemap_socal_ggplot.RData")
+# save(basemap, file = "Figures/03_basemap_socal_ggplot.RData")
 
-# Plot per flow metric
-## define metrics to loop through
+load(file = "Figures/03_basemap_socal_ggplot.RData")
+
+# Plot per flow metric and result
+
 metric <- unique(imps_sf$Hydro_endpoint)
 metric
-m=1
 
-for(m in 1:length(metric)) {
+## defione impact acategory
+results <- unique(imps_sf$Result)
+r=2
+m=2
+results
+
+imps_sf
   
-  imps_sfx <- imps_sf %>%
-    filter(Hydro_endpoint == metric[m])
-  
-  # imps_sfx
-  
-  m1 <- basemap + 
-    geom_point(data = imps_sfx, aes(x = longitude, y = latitude, colour = Threshold)) +
-    scale_color_jco(name = "Modified Class") +
-    facet_wrap(~Result)
-  # m1
-  
-  file.name1 <- paste0("Figures/03_", metric[m],"_map_4_cats_per_impact.jpg")
-  ggsave(m1, filename=file.name1, dpi=500, height=10, width=15)
+  for(m in 1:length(metric)) {
+    
+    imps_sf1 <- imps_sf %>%
+      filter(Hydro_endpoint == metric[m], SmoothingFunc == 6 )
+    
+    # for(r in 1:length(results)) {
+      
+      ## extract - impact result
+      # imps_sfx <- imps_sf1 %>%
+      #   filter(Result == results[r])
+    
+    m1 <- basemap + 
+      geom_point(data = imps_sf1, aes(x = longitude, y = latitude, colour = Threshold), size = 5) +
+      scale_color_discrete(name = "Modified Class") +
+      guides(size = "none") +
+      facet_wrap(~Result)
+    m1
+    
+    file.name1 <- paste0("Figures/03_", metric[m],"_", results[r], "_map_4_cats_per_impact.jpg")
+    file.name1
+    ggsave(m1, filename=file.name1, dpi=500, height=10, width=15)
+    
+  }
   
 }
 
+# Plot per flow metric and channel type
+
+metric <- unique(imps_sf$Hydro_endpoint)
+metric
+
+## defione impact acategory
+type <- unique(imps_sf$Threshold)
+r=2
+m=2
+results
+
+for(m in 1:length(metric)) {
+  
+  imps_sf1 <- imps_sf %>%
+    filter(Hydro_endpoint == metric[m], SmoothingFunc == 6)
+  
+  # for(r in 1:length(results)) {
+  #   
+  #   ## extract - impact result
+  #   imps_sfx <- imps_sf1 %>%
+  #     filter(Result == results[r])
+  #   
+    m1 <- basemap + 
+      geom_point(data = imps_sf1, aes(x = longitude, y = latitude, colour = Result), size = 5) +
+      scale_color_jco(name = "Impact Type") + ## colours re-order
+      guides(size = "none") +
+      facet_wrap(~Threshold)
+    
+    m1
+    file.name1 <- paste0("Figures/03_", metric[m], "_map_4_cats_per_channel_type.jpg")
+    file.name1
+    ggsave(m1, filename=file.name1, dpi=500, height=10, width=15)
+    
+  
+  
+}
 
 
 ## plot
@@ -263,12 +330,16 @@ basemapsList <- c("Esri.WorldTopoMap", "Esri.WorldImagery",
 mapviewOptions(basemaps=basemapsList, fgb = FALSE)
 
 ## filter dry season and make spatial
-impsx <- imps %>%
+impsx <- impx1 %>%
   filter(Hydro_endpoint == "DS_Mag_50", Index == "csci",
-         Result == "BothImpact") %>%
+         Result == "BothImpact", !Threshold %in% c("NATLow", "NATMed", "NATHigh")) %>%
   st_as_sf(coords=c("longitude", "latitude"), crs=4326, remove=F)
 names(impsx)
+unique(impsx$masterid)
 
+class(impsx)
+st_write(impsx, "output_data/03_bothImpact_dry_season_csci.shp")
+?st_write
 m1 <- mapview(impsx, zcol = "Threshold",  col.regions=c("red", "green", "orange", "blue"),
               layer.name="Channel Type")
 

@@ -1092,8 +1092,7 @@ for(i in 1:length(gam.lm)) {
   ## get model, predict, extract all data and categories
   mod <- gam.lm[[i]]
   predictedVals <- predict(mod,  type = "response")
-  predictedVals
-  ?predict
+
   DFX <- cbind(na.omit(mod$data), as.data.frame(predictedVals)) %>%
     rename(Value = deltah_final) %>%
     mutate(Variable = tmet) 
