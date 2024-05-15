@@ -344,6 +344,7 @@ head(limitsx3)
 ## save out
 write.csv(limitsx3, "output_data/05_QGAM_FFM_Ranges_With_Adjustments.csv")
 
+limitsx3 <- read.csv("output_data/05_QGAM_FFM_Ranges_With_Adjustments.csv")
 
 # Add to predicted value --------------------------------------------------
 
@@ -398,11 +399,19 @@ names(allLims)
 
 # Get categories ----------------------------------------------------------
 
+## some masterids repeated - take highest
+
+allLimsx <- allLims %>%
+  group_by(masterid, Index) %>% ## group variables
+  mutate(IndexValueMax = max(IndexValue)) %>% ## take max
+  select(-IndexValue) %>% ## remove indexvalue
+  distinct() ## remove duplicates
+  
 ## define if hydro is within mod limits & bio above threshold
-imps <- allLims %>%
-  group_by(metric, Index, Hydro_endpoint, Threshold, BioThresh, masterid, COMID, SmoothingFunc, Quantile) %>%
+imps <- allLimsx %>%
+  group_by(metric, Index, Hydro_endpoint, Threshold, BioThresh, masterid, COMID, Quantile) %>%
   mutate(WithinHydroLimits = ifelse(deltah_final <= Upper2 & deltah_final >= Lower2, "Within", "NotWithin")) %>%  ## within hydro limits
-  mutate(WithinBioLimits = ifelse(IndexValue >= BioThresh, "Within", "NotWithin"))  %>%## above bio thresholds
+  mutate(WithinBioLimits = ifelse(IndexValueMax >= BioThresh, "Within", "NotWithin"))  %>%## above bio thresholds
   mutate(Result = case_when((WithinHydroLimits == "Within" & WithinBioLimits == "Within") ~ "NoImpact", ## add impact
                             (WithinHydroLimits == "Within" & WithinBioLimits == "NotWithin") ~ "BioImpact", ##
                             (WithinHydroLimits == "NotWithin" & WithinBioLimits == "Within") ~ "HydroImpact",
@@ -413,6 +422,8 @@ imps <- allLims %>%
 write.csv(imps, "output_data/05_impact_ffm_bio.csv")
 
 unique(imps$Threshold)
+
+imps <- read.csv("output_data/05_impact_ffm_bio.csv")
 
 ## NAs are from where we have data in raw DF but not channel engineering - remove
 ## others are when we have no asci value - remove
@@ -426,16 +437,16 @@ sum(is.na(imps$Result)) ## 0
 ## tally of impact per ffm
 
 tallyImpact <- imps %>%
-  group_by(Index, Hydro_endpoint, Flow.Metric.Name,Threshold, Result) %>%
+  group_by(Index, Hydro_endpoint, Flow.Metric.Name, Threshold, Result, Quantile, metric) %>%
   distinct() %>%
-  tally() %>%
+  tally() #%>%
   # drop_na(Result) %>%
-  mutate(PercChans = (n/sum(n)*100))
+  # mutate(PercChans = (n/sum(n)*100))
 
 tallyImpact
 
 write.csv(tallyImpact, "output_data/05_count_impact.csv")
 
-tallyImpact <- read.csv("output_data/05_count_impact.csv")
+# tallyImpact <- read.csv("output_data/05_count_impact.csv")
 
 # Ma
